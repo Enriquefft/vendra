@@ -1,0 +1,83 @@
+{
+	"$schema": "https://next.biomejs.dev/schemas/2.0.0-beta/schema.json",
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on",
+				"useSortedKeys": "on",
+				"useSortedProperties": "on"
+			}
+		}
+	},
+	"css": {
+		"formatter": {
+			"enabled": true
+		},
+		"linter": {
+			"enabled": true
+		},
+		"parser": {
+			"cssModules": true
+		}
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"includes": ["**", "!**/node_modules", "!**/.direnv", "!**/.next"]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		},
+		"globals": ["React", "JSX"]
+	},
+	"json": {
+		"formatter": {
+			"enabled": true
+		}
+	},
+	"linter": {
+		"domains": {
+			"next": "all",
+			"react": "all",
+			"test": "all"
+		},
+		"enabled": true,
+		"includes": [
+			"**",
+			"!**/old/**/*",
+			"!**/next-env.d.ts",
+			"!**/schema.gen*",
+			"!**/experimental",
+			"!**/src/components/ui/*"
+		],
+		"rules": {
+			"recommended": true
+		}
+	},
+	"overrides": [
+		{
+			// allow default export in page.tsx | layout.tsx | error.tsx files
+			"includes": [
+				"**/src/app/**/page.tsx",
+				"**/src/app/**/layout.tsx",
+				"**/src/app/**/error.tsx"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off"
+					}
+				}
+			}
+		}
+	],
+	"vcs": {
+		"clientKind": "git",
+		"enabled": true,
+		"useIgnoreFile": false
+	}
+}
