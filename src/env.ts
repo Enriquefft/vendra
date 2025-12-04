@@ -9,9 +9,8 @@ const url = getBaseUrl();
 
 export const env = createEnv({
 	client: {
-		NEXT_PUBLIC_APP_URL: z.string().optional(),
-		NEXT_PUBLIC_POSTHOG_KEY: z.string(),
-		NEXT_PUBLIC_PROJECT_NAME: z.string(),
+		NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+		NEXT_PUBLIC_PROJECT_NAME: z.string().min(1),
 	},
 
 	emptyStringAsUndefined: false,
@@ -22,17 +21,12 @@ export const env = createEnv({
 		GOOGLE_CLIENT_ID: process.env["GOOGLE_CLIENT_ID"],
 		GOOGLE_CLIENT_SECRET: process.env["GOOGLE_CLIENT_SECRET"],
 		NEXT_PUBLIC_APP_URL: process.env["NEXT_PUBLIC_APP_URL"],
-		NEXT_PUBLIC_POSTHOG_KEY: process.env["NEXT_PUBLIC_POSTHOG_KEY"],
 		NEXT_PUBLIC_PROJECT_NAME: process.env["NEXT_PUBLIC_PROJECT_NAME"],
-		POLAR_ACCESS_TOKEN: process.env["POLAR_ACCESS_TOKEN"],
-		POLAR_MODE: process.env["POLAR_MODE"],
 	},
 	server: {
-		BETTER_AUTH_URL: z.string().default(url),
+		BETTER_AUTH_URL: z.string().url().default(url),
 		DRIZZLE_DATABASE_URL: z.string().url(),
 		GOOGLE_CLIENT_ID: z.string(),
 		GOOGLE_CLIENT_SECRET: z.string(),
-		POLAR_ACCESS_TOKEN: z.string(),
-		POLAR_MODE: z.enum(["sandbox", "production"]).default("sandbox"),
 	},
 });
