@@ -34,7 +34,7 @@ It references:
 - Proteger el App Router con middleware/redirección a login si el usuario no está autenticado.
 
 ### Validation:
-- App runs via `npm run dev`
+- App runs via `bun run dev`
 
 ---
 

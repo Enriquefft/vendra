@@ -39,14 +39,14 @@ If you need context about features or UX, read `Requirements.md`, `Architecture.
 
 ## 2. Setup Commands
 
-Assume a standard Node.js environment with npm. If `pnpm` or `bun` are added later, update this section.
+Assume a standard Node.js environment with **Bun**.
 
 From the project root:
 
 - Install dependencies:
 
   ```bash
-  npm install
+  bun install
   ```
 
 * Create and populate `.env` with at least:
@@ -66,7 +66,7 @@ From the project root:
 * Start dev server:
 
   ```bash
-  npm run dev
+  bun run dev
   ```
 
 ---
@@ -76,21 +76,21 @@ From the project root:
 * Type-check (strict TypeScript is expected):
 
   ```bash
-  npm run typecheck
+  bun run type
   # or, if not defined:
-  npx tsc --noEmit
+  bunx tsc --noEmit
   ```
 
 * Lint:
 
   ```bash
-  npm run lint
+  bun run lint
   ```
 
 * Build:
 
   ```bash
-  npm run build
+  bun run build
   ```
 
 If any of these commands are missing in `package.json`, either:
@@ -109,22 +109,22 @@ Typical commands:
 * Run unit/integration tests:
 
   ```bash
-  npm test
+  bun test
   ```
 
 * Run E2E tests (if Playwright/Cypress is configured):
 
   ```bash
-  npm run test:e2e
+  bun run test:e2e
   ```
 
 Expectations for agents:
 
 1. **Before major refactors or feature changes**, try to run:
 
-   * `npm run lint`
-   * `npm run typecheck`
-   * `npm test` (or `npm run test:e2e` when relevant)
+   * `bun run lint`
+   * `bun run type`
+   * `bun test` (or `bun run test:e2e` when relevant)
 2. If tests or commands cannot run due to missing deps, network limits, or CI-only scripts:
 
    * Clearly state this in the commit/PR description.
@@ -294,7 +294,7 @@ Even if you’re not literally opening a GitHub PR, follow these practices:
 
   * What changed
   * Which files were touched
-  * Any commands you ran (`npm run lint`, `npm test`, etc.)
+* Any commands you ran (`bun run lint`, `bun test`, etc.)
   * Any remaining TODOs or limitations
 
 Example PR description:
@@ -303,7 +303,7 @@ Example PR description:
 >
 > * Implemented `/resultado/[sessionId]` page
 > * New components: `AnalysisView`, `ScoreBadge`
-> * Ran `npm run lint` and `npm run typecheck` (both passed)
+> * Ran `bun run lint` and `bun run type` (both passed)
 > * No tests added yet, to be done in a follow-up PR
 
 ---
