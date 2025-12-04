@@ -1,57 +1,333 @@
-# Agent Instructions
+# AGENTS.md
 
-This repository provides a **Next.js** template configured with **TypeScript**, **Bun**, **Tailwind CSS**, and **Drizzle ORM**. It is meant to be cloned and adapted into your own project. Update names, documentation, and configuration files to reflect the new project once you copy this template.
+Guidance for coding agents working on **VENDRA**, a voice-based P2C sales training platform built with **Next.js**, **TypeScript**, **Tailwind CSS**, **shadcn/ui**, **Drizzle ORM**, **Postgres**, and **OpenAI APIs**.
 
-## Workflow
+This file complements the project docs:
 
-1. **Format** all changed files with **Biome**:
-   ```bash
-   bun run format
-   # or
-   biome format --write
-   ```
-2. **Type-check** the code:
-   ```bash
-   bunx tsc --noEmit
-   ```
-3. **Run tests**:
-   ```bash
-   bun test
-   ```
-   If these commands cannot run because of missing dependencies or network limits, note this in the PR description.
-4. Keep commits small and focused with clear messages. Prefix them with `feat:`, `fix:`, `style:`, or `chore:` when suitable.
-5. Pull request descriptions must summarize the changes, cite any updated files, and show test output.
+- `Requirements.md`
+- `Architecture.md`
+- `Plan.md`
+- `Branding.md`
+- `LandingMockup.md`
+- `Business.md`
+- `Bugs.md`
 
-## Repository Structure
+If anything in this file conflicts with explicit user instructions in chat, the chat instructions win.
 
-- `src/app` – Next.js routes and pages.
-- `src/components` – shared React components. Reusable UI primitives live in `src/components/ui`.
-- `src/db` – Drizzle schemas and database utilities.
-- `src/styles` – global CSS and fonts.
-- `tests` – unit tests configured for Bun.
-- `docs` – documentation such as the brand guideline template at `docs/brand.md`.
+---
 
-## Code Style
+## 1. Project Overview
 
-- Follow patterns already established in the components and utilities.
-- Use **Tailwind CSS** classes and Shadcn/UI components for UI work.
-- Components and types use **PascalCase**. Variables and functions use **camelCase**. File names use **kebab-case**.
-- Keep lines under 80 characters when practical and remove unused code.
-- Single source of truth is a must everywhere and for everything.
+VENDRA is a web app that:
 
-## Customization Checklist
+- Lets a **salesperson** configure a sales scenario (product, target, type of call).
+- Simulates a **realistic client** using OpenAI (client responds in text).
+- Captures the salesperson’s **voice** and transcribes it via OpenAI STT.
+- Runs a **post-call analysis** (score 0–100, successes, improvement points, key moments).
+- Stores minimal data in Postgres via **Drizzle ORM**.
 
-This is a template repository. After cloning, update all references to match your project:
+Key constraints:
 
-- Rename the project in `package.json` and `README.md`.
-- Adjust environment variables in `src/env.ts` and `.env.local` (if present).
-- Replace placeholder text in `docs/brand.md` with your real brand details.
-- Review the sample components and pages under `src/app` and `src/components` and adapt as needed.
-- Lastly, update this file: `AGENTS.md`, removing every mention that this is a template repository alongside this customization checklist (after making all needed changes).
+- All core logic is **TypeScript** in a **Next.js App Router** project.
+- Backend is **Node.js + TS only** (no Python for the MVP).
+- OpenAI is the only AI provider.
+- UI uses **Tailwind CSS** + **shadcn/ui** and must follow the brand defined in `Branding.md`.
 
+If you need context about features or UX, read `Requirements.md`, `Architecture.md`, and `LandingMockup.md` first.
 
-## AGENTS.md Inheritance
+---
 
-These instructions govern the entire repository. If another `AGENTS.md` is added in a subdirectory, its rules override these instructions for files within that folder.
+## 2. Setup Commands
 
-By following these guidelines and updating all placeholders, you can transform this template into your own production-ready project.
+Assume a standard Node.js environment with npm. If `pnpm` or `bun` are added later, update this section.
+
+From the project root:
+
+- Install dependencies:
+
+  ```bash
+  npm install
+  ```
+
+* Create and populate `.env` with at least:
+
+  ```bash
+  OPENAI_API_KEY=your-key
+  DATABASE_URL=postgres-connection-string
+  ```
+
+* Run database migrations (Drizzle):
+
+  ```bash
+  # adjust to the actual drizzle command used in the repo
+  npx drizzle-kit migrate
+  ```
+
+* Start dev server:
+
+  ```bash
+  npm run dev
+  ```
+
+---
+
+## 3. Build, Lint & Type-Check
+
+* Type-check (strict TypeScript is expected):
+
+  ```bash
+  npm run typecheck
+  # or, if not defined:
+  npx tsc --noEmit
+  ```
+
+* Lint:
+
+  ```bash
+  npm run lint
+  ```
+
+* Build:
+
+  ```bash
+  npm run build
+  ```
+
+If any of these commands are missing in `package.json`, either:
+
+* Add a minimal script that matches the architecture described in `Architecture.md`, or
+* Note the limitation in your PR/commit message.
+
+---
+
+## 4. Testing Instructions
+
+Tests should eventually live under `tests/` and/or alongside components in `src`. If tests are missing, prefer **adding** them rather than ignoring this section.
+
+Typical commands:
+
+* Run unit/integration tests:
+
+  ```bash
+  npm test
+  ```
+
+* Run E2E tests (if Playwright/Cypress is configured):
+
+  ```bash
+  npm run test:e2e
+  ```
+
+Expectations for agents:
+
+1. **Before major refactors or feature changes**, try to run:
+
+   * `npm run lint`
+   * `npm run typecheck`
+   * `npm test` (or `npm run test:e2e` when relevant)
+2. If tests or commands cannot run due to missing deps, network limits, or CI-only scripts:
+
+   * Clearly state this in the commit/PR description.
+3. When you add new code paths (especially around:
+
+   * Persona generation
+   * Conversation orchestration
+   * Analysis
+   * DB access
+     …add at least one focused test covering the new behavior.
+
+---
+
+## 5. Repository Structure
+
+Use and preserve this structure when adding new files:
+
+* `src/app` – Next.js routes and pages using the App Router:
+
+  * `/configuracion` – scenario configuration.
+  * `/simulacion/[sessionId]` – simulation UI (voice input + text chat).
+  * `/resultado/[sessionId]` – analysis view.
+* `src/components` – shared React components:
+
+  * `ClientCard`, `ScenarioForm`, `CallView`, `AudioRecorderButton`, `ChatMessages`, `AnalysisView`, etc.
+  * Reusable UI primitives (shadcn/ui-based) in `src/components/ui`.
+* `src/lib` – application logic and service layers:
+
+  * `persona` (PersonaEngine)
+  * `conversation` (ConversationOrchestrator)
+  * `analysis` (AnalysisEngine)
+  * `audio` (AudioGateway)
+  * `session` (SessionService)
+* `src/db` – Drizzle schemas and database utilities:
+
+  * `session`, `persona_snapshot`, `conversation_turn`, `analysis` tables as in `Architecture.md` and `Plan.md`.
+* `src/styles` – global CSS and Tailwind config.
+* `tests` – unit/e2e tests (Playwright/Cypress/Jest/Vitest; choose one consistent approach).
+* `docs` – documentation:
+
+  * `Requirements.md`
+  * `Architecture.md`
+  * `Plan.md`
+  * `Branding.md`
+  * `LandingMockup.md`
+  * `Business.md`
+  * `Bugs.md`
+
+If you introduce new folders, keep them consistent with this mental model.
+
+---
+
+## 6. Code Style & Conventions
+
+### Language & Framework
+
+* TypeScript everywhere (no loose `any` unless justified).
+* Next.js App Router (no new Pages Router code).
+* React functional components only (no class components).
+
+### UI
+
+* Use **Tailwind CSS** for styling.
+* Use **shadcn/ui** components as the base for UI primitives.
+* Follow the branding in `Branding.md`:
+
+  * Colors: primary blue `#1C4E89`, green `#2DAA6E`, yellow `#F2C044`, light gray `#F5F7FA`.
+  * Typography: Inter + Source Sans Pro patterns.
+* Keep layouts clean, with generous whitespace. Use the patterns in `LandingMockup.md`.
+
+### Naming
+
+* Components & types: **PascalCase** (e.g., `ClientCard`, `AnalysisResult`).
+* Variables & functions: **camelCase** (e.g., `generatePersona`, `getClientReply`).
+* File names: **kebab-case** (e.g., `client-card.tsx`, `persona-engine.ts`).
+* Database tables and columns: keep them aligned with Drizzle schema defined in `Plan.md` / `Architecture.md`.
+
+### General style
+
+* Keep lines under ~100 characters when possible.
+* Prefer pure functions and simple, explicit control flow.
+* Avoid global mutable state; use React context or local state where needed.
+* Do not introduce Python or other backend languages for core app logic.
+
+---
+
+## 7. Domain Rules (Very Important)
+
+When interacting with or modifying domain logic, respect the product definition:
+
+* **PersonaEngine**:
+
+  * Takes a seller-provided ScenarioConfig.
+  * Generates a *single* realistic persona per session.
+  * Uses OpenAI chat with clear JSON outputs validated via zod.
+  * Must reflect Peruvian/LatAm P2C context where appropriate.
+
+* **ConversationOrchestrator**:
+
+  * Receives the seller’s utterance (from STT) plus session ID.
+  * Loads persona + conversation history from DB.
+  * Calls OpenAI to generate a client response + meta data:
+
+    * Interest level
+    * Whether the client wants to end the call
+  * Always writes turns (seller/client) into `conversation_turn`.
+
+* **AnalysisEngine**:
+
+  * Runs only after the call ends.
+  * Uses full conversation + persona to compute:
+
+    * Score 0–100
+    * Successes
+    * Improvements (with concrete suggestions)
+    * Key moments (with quotes and turn references)
+  * Must remain consistent with `Requirements.md` and examples in `Plan.md` / `LandingMockup.md`.
+
+* **AudioGateway**:
+
+  * Responsible only for STT (voice → text).
+  * Uses OpenAI Whisper/audio APIs.
+  * Does not decide business logic.
+
+If you change any of these behaviors, cross-check with:
+
+* `Requirements.md`
+* `Architecture.md`
+* `Plan.md`
+  and update them if necessary.
+
+---
+
+## 8. Bug Tracking
+
+All bugs must be logged in **`Bugs.md`** using the template defined there.
+
+Agent expectations:
+
+* When you **discover** a defect (logic, UX, performance, integration, etc.):
+
+  * Add an entry to `Bugs.md` under “Known Bugs”.
+* When you **start** working on a fix:
+
+  * Update status to “En progreso”.
+* When you **finish** a fix:
+
+  * Set status to “Resuelto”, add date and short “Resolution” description.
+  * If relevant, reference commits or PR IDs.
+
+Do **not** delete old bug entries; they form part of the project history.
+
+---
+
+## 9. Commit & PR Guidelines
+
+Even if you’re not literally opening a GitHub PR, follow these practices:
+
+* Keep changesets small and focused.
+* Prefix commit/PR titles with:
+
+  * `feat:` for new features
+  * `fix:` for bug fixes
+  * `refactor:` for internal changes
+  * `chore:` for tooling/doc updates
+* In the description, summarize:
+
+  * What changed
+  * Which files were touched
+  * Any commands you ran (`npm run lint`, `npm test`, etc.)
+  * Any remaining TODOs or limitations
+
+Example PR description:
+
+> feat: add analysis page layout
+>
+> * Implemented `/resultado/[sessionId]` page
+> * New components: `AnalysisView`, `ScoreBadge`
+> * Ran `npm run lint` and `npm run typecheck` (both passed)
+> * No tests added yet, to be done in a follow-up PR
+
+---
+
+## 10. Security & Safety Considerations
+
+* Never hardcode API keys (OpenAI, DB, etc.).
+* All secrets must come from environment variables.
+* When logging, do **not** log:
+
+  * Full conversation contents in production (unless explicitly allowed).
+  * API keys or access tokens.
+* If you detect a potential privacy or data retention issue:
+
+  * Log it as a bug in `Bugs.md` with **Impact: Alto**.
+
+---
+
+## 11. AGENTS.md Inheritance
+
+These instructions apply to the entire repo by default.
+
+If subdirectories later define their own `AGENTS.md`, **those files override** these rules for files within those directories. Do not add nested AGENTS.md unless the subproject genuinely needs different build/test/style instructions.
+
+---
+
+By following this AGENTS.md and keeping `Requirements.md`, `Architecture.md`, `Plan.md`, `Branding.md`, `LandingMockup.md`, `Business.md`, and `Bugs.md` in sync with your changes, you help ensure VENDRA remains coherent, testable, and easy for both humans and agents to work on.
