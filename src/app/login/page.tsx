@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -14,7 +15,7 @@ async function startGoogleSignIn() {
 	});
 
 	if (response?.url) {
-		redirect(response.url);
+		redirect(response.url as Route);
 	}
 
 	if (response?.redirect) {
