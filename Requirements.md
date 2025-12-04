@@ -27,6 +27,7 @@ Este documento define todos los requerimientos funcionales, no funcionales y ope
 - Ficha detallada del cliente generada por IA (opcional de ocultar).
 - Integración con OpenAI exclusivamente.
 - No se necesita un backend Python — toda la lógica corre en Next.js + Node + TS.
+- Acceso solo para usuarios autenticados vía Google OAuth (Better Auth) y guardados en la base de datos.
 
 ---
 
@@ -131,6 +132,7 @@ Debe incluir:
 - Next.js (App Router)
 - Node.js + TypeScript
 - Drizzle ORM + Postgres
+- Better Auth con proveedor de Google OAuth.
 - OpenAI:
   - Chat/completions
   - Audio/transcriptions
@@ -142,6 +144,10 @@ Debe incluir:
   - AnalysisEngine
   - AudioGateway
   - SessionService
+- Autenticación y gestión de sesiones de usuario
+  - Creación de usuarios al iniciar sesión con Google (guardar id, email, nombre, avatar cuando esté disponible).
+  - Todos los recursos (configuración, simulación, resultados) requieren sesión activa.
+  - Asociar cada sesión de simulación al usuario autenticado.
 
 ---
 
@@ -157,6 +163,7 @@ Debe incluir:
 - Ficha del cliente a la derecha
 
 ### 7.2 Páginas
+- `/login` o modal de acceso obligatorio con botón “Continuar con Google”
 - `/configuracion`
 - `/simulacion/[sessionId]`
 - `/resultado/[sessionId]`

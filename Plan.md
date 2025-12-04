@@ -25,7 +25,13 @@ It references:
 - Setup repo structure
 - Configure Drizzle + Postgres
 - Install OpenAI SDK
-- Create `.env`
+- Configure `.env.example` & `src/env`
+
+### Step 0.2 — Autenticación con Better Auth (Google)
+- Añadir Better Auth con proveedor de Google OAuth.
+- Crear tabla `user` y relacionar con sesiones de simulación.
+- Guardar datos básicos (id externo, email, nombre, avatar) al iniciar sesión.
+- Proteger el App Router con middleware/redirección a login si el usuario no está autenticado.
 
 ### Validation:
 - App runs via `npm run dev`
@@ -35,7 +41,7 @@ It references:
 # 3. Phase 1 — MVP
 
 ### Step 1 — Database & Models
-- Implement session, persona_snapshot, conversation_turn, analysis tables.
+- Implement user, session, persona_snapshot, conversation_turn, analysis tables.
 - Migrate using Drizzle.
 - Smoke test DB.
 
@@ -53,6 +59,7 @@ It references:
 - Implement `/configuracion`
 - ScenarioForm with all inputs
 - Server action → create session
+- Requiere usuario autenticado (redirigir a login con Better Auth si no hay sesión)
 
 ---
 
@@ -76,6 +83,7 @@ It references:
 - Chat interface
 - Audio recorder
 - ClientCard with hide/minimize options
+- Bloqueada tras autenticación; carga sesión vinculada al usuario en Drizzle
 
 ---
 
@@ -90,6 +98,7 @@ It references:
 - Score visualization
 - Aciertos / mejoras / momentos clave
 - Persona summary
+- Solo accesible con sesión activa y validación de pertenencia del usuario a la sesión
 
 ---
 

@@ -1,6 +1,6 @@
 # VENDRA
 
-VENDRA is a voice-based P2C sales training simulator that lets reps practice calls with an AI-driven persona, capture their speech, and receive actionable feedback immediately after each session. The product is built with Next.js (App Router) and TypeScript, uses Tailwind + shadcn/ui for the interface, and stores data in Postgres via Drizzle ORM.
+VENDRA is a voice-based P2C sales training simulator that lets reps practice calls with an AI-driven persona, capture their speech, and receive actionable feedback immediately after each session. Access to the app is gated by Google sign-in via Better Auth, and user profiles are stored in Postgres alongside every simulation session. The product is built with Next.js (App Router) and TypeScript, uses Tailwind + shadcn/ui for the interface, and stores data in Postgres via Drizzle ORM.
 
 ## Documentation
 - [Requirements](Requirements.md) – product goals and functional scope
@@ -23,7 +23,7 @@ VENDRA is a voice-based P2C sales training simulator that lets reps practice cal
    ```bash
    bun install
    ```
-3. Copy `.env.local` (provided with placeholders) and fill in your secrets. See the environment variable table below.
+3. Copy `.env.local` (provided with placeholders) and fill in your secrets. See the environment variable table below. Google OAuth credentials are required before you can sign in to the app.
 4. Run database migrations:
    ```bash
    bun run db:push

@@ -11,6 +11,7 @@ The system architecture supports:
 - Realistic conversation simulation
 - Post-call analysis
 - Complete web-based experience (Next.js)
+- Mandatory Google OAuth login backed by Better Auth and persisted user records.
 
 No Python is used. Entire logic lives in **Node + TypeScript** using **Next.js**.
 
@@ -31,6 +32,7 @@ Backend:
 - Node.js + TypeScript
 - OpenAI SDK (chat + audio)
 - Drizzle ORM + Postgres
+- Better Auth (Google OAuth provider)
 
 Deployment:
 - Vercel
@@ -86,6 +88,12 @@ After end:
 - Appends turns
 - Ends session
 - Retrieves full data
+- Associates every session with the authenticated user id from Better Auth
+
+## 4.6 AuthService
+- Relies on Better Auth Google OAuth for sign-in and session cookies
+- Exposes helpers to fetch the current user server-side
+- Stores user profile data (id, email, name, avatar) in the user table on first login
 
 ---
 
@@ -96,6 +104,8 @@ After end:
 - **persona_snapshot**
 - **conversation_turn**
 - **analysis**
+- **user** (Better Auth-managed user profile with Google identity)
+- **session_user** linkage (each simulation session tied to authenticated user)
 
 Described in detail in `Plan.md`.
 
@@ -118,16 +128,21 @@ Generates analysis.
 ### `/api/stt` (POST)
 Standalone STT endpoint (debug).
 
+### `/api/auth/*`
+Better Auth endpoints for Google OAuth sign-in, callback, session validation, and sign-out.
+
 ---
 
 # 7. Frontend Architecture
 
 ### Pages:
+- `/login` (Better Auth Google sign-in entrypoint; required before accessing app flows)
 - `/configuracion` → scenario creation
 - `/simulacion/[sessionId]` → voice simulation
 - `/resultado/[sessionId]` → analysis
 
 ### Components:
+- AuthGuard / middleware to redirect unauthenticated users to Google login
 - ScenarioForm
 - CallView
 - AudioRecorderButton
@@ -145,5 +160,6 @@ Standalone STT endpoint (debug).
 - Analysis must be actionable and concise
 - All modules must log errors → update `bugs.md`
 - No hallucinated features allowed
+- App routes and APIs are protected: unauthenticated users are redirected to Google login via Better Auth
 
 ---

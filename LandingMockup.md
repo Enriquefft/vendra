@@ -7,7 +7,8 @@
 
 - H1: “La forma más realista de entrenar ventas.”
 - Subtexto: “Simulaciones con clientes reales (por IA). Feedback accionable.”
-- Botón verde: **Probar gratis**
+- Botón verde: **Probar gratis** (abre modal de inicio de sesión)
+- Botón secundario: **Continuar con Google** (Better Auth) para entrar al producto
 - Mockup de la simulación a la derecha.
 
 ---
@@ -18,6 +19,7 @@
 1. Configura tu caso
 2. Habla como en la vida real
 3. Recibe análisis accionable
+4. Ingresa siempre con Google para guardar tus resultados
 
 ---
 
@@ -52,6 +54,7 @@ Testimonios de vendedores de Perú.
 # 7. Features Grid
 
 - Personalización total
+- Login seguro con Google (Better Auth)
 - STT por voz
 - Cliente IA realista
 - Análisis profundo
