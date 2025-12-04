@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PersonaProfile, ScenarioConfig } from "@/db/schema/simulation";
+import type { PersonaProfile } from "@/db/schema/simulation";
 import { contactTypeEnum } from "@/db/schema/simulation";
 
 export const scenarioConfigSchema = z.object({
@@ -43,6 +43,3 @@ export const personaProfileSchema: z.ZodType<PersonaProfile> = z.object({
 });
 
 export type ScenarioConfigInput = z.infer<typeof scenarioConfigSchema>;
-type _ScenarioConfigCompatibility = ScenarioConfigInput extends ScenarioConfig
-	? true
-	: never;

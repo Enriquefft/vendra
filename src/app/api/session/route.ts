@@ -35,6 +35,13 @@ export async function POST(request: NextRequest) {
 			})
 			.returning({ id: simulationSessions.id });
 
+		if (!createdSession) {
+			return NextResponse.json(
+				{ error: "No se pudo crear la sesión" },
+				{ status: 500 },
+			);
+		}
+
 		const persona = await generatePersona(scenarioConfig);
 
 		await db.insert(personaSnapshots).values({
