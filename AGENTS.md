@@ -93,6 +93,16 @@ From the project root:
   bun run build
   ```
 
+Before pushing any change, ensure all three commands succeed locally:
+
+```bash
+bun run build
+biome check
+bun test
+```
+
+If a command is unavailable, note it explicitly in your commit/PR message along with the reason.
+
 If any of these commands are missing in `package.json`, either:
 
 * Add a minimal script that matches the architecture described in `Architecture.md`, or
@@ -296,6 +306,8 @@ Even if you’re not literally opening a GitHub PR, follow these practices:
   * Which files were touched
 * Any commands you ran (`bun run lint`, `bun test`, etc.)
   * Any remaining TODOs or limitations
+
+* Keep `Plan.md` current: when you complete and test a section, mark it as done in the plan so future agents can see progress at a glance.
 
 Example PR description:
 
