@@ -30,6 +30,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
 
+/** Maximum character length for content preview before truncation */
+const CONTENT_PREVIEW_MAX_LENGTH = 150;
+
 type ConversationTurn = {
 	id: string;
 	role: "seller" | "client";
@@ -44,6 +47,26 @@ type AnalysisData = {
 	improvements: ImprovementItem[];
 	keyMoments: KeyMoment[];
 };
+
+type ErrorResponse = {
+	error?: string;
+};
+
+/**
+ * Formats contact type enum value for display.
+ * Replaces underscores with spaces for better readability.
+ */
+function formatContactType(contactType: string): string {
+	return contactType.replace(/_/g, " ");
+}
+
+/**
+ * Truncates text to specified length with ellipsis if necessary.
+ */
+function truncateText(text: string, maxLength: number): string {
+	if (text.length <= maxLength) return text;
+	return `${text.slice(0, maxLength)}...`;
+}
 
 export interface AnalysisViewProps {
 	sessionId: string;
@@ -86,7 +109,7 @@ function ScoreDisplay({ score }: { score: number }) {
 		<div className="flex flex-col items-center">
 			<div className="relative">
 				<svg width="140" height="140" className="-rotate-90">
-					<title>Score progress</title>
+					<title>Indicador de puntuación: {score} de 100 puntos</title>
 					{/* Background circle */}
 					<circle
 						cx="70"
@@ -201,9 +224,9 @@ export function AnalysisView({
 			});
 
 			if (!response.ok) {
-				const errorData = (await response.json().catch(() => null)) as {
-					error?: string;
-				} | null;
+				const errorData: ErrorResponse | null = await response
+					.json()
+					.catch(() => null);
 				throw new Error(errorData?.error ?? "Error al generar el análisis");
 			}
 
@@ -346,7 +369,7 @@ export function AnalysisView({
 									Tipo de contacto
 								</Label>
 								<p className="capitalize">
-									{scenarioConfig.contactType.replace("_", " ")}
+									{formatContactType(scenarioConfig.contactType)}
 								</p>
 							</div>
 						</CardContent>
@@ -458,9 +481,10 @@ export function AnalysisView({
 																	: "Cliente"}
 																:
 															</span>{" "}
-															{turn.content.length > 150
-																? `${turn.content.slice(0, 150)}...`
-																: turn.content}
+															{truncateText(
+																turn.content,
+																CONTENT_PREVIEW_MAX_LENGTH,
+															)}
 														</div>
 													)}
 
