@@ -84,7 +84,7 @@ From the project root:
 * Lint:
 
   ```bash
-  bun run lint
+  biome check --fix
   ```
 
 * Build:
@@ -93,7 +93,7 @@ From the project root:
   bun run build
   ```
 
-Before pushing any change, ensure all three commands succeed locally:
+Before pushing any change, ensure all three commands succeed locally (no errors or warnings):
 
 ```bash
 bun run build
