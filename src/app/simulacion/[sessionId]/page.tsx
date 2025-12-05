@@ -109,6 +109,10 @@ export default async function SimulationPage({ params }: PageProps) {
 					sessionId={sessionId}
 					persona={personaSnapshot.persona}
 					initialMessages={initialMessages}
+					maxDurationMinutes={
+						simulationSession.scenarioConfig.simulationPreferences
+							.maxDurationMinutes
+					}
 					className="flex-1"
 				/>
 			</div>
