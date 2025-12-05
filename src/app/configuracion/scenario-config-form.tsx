@@ -2,8 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useEffect, useId } from "react";
-import { useFormState } from "react-dom";
+import { useActionState, useEffect, useId } from "react";
 import { toast } from "sonner";
 import type { CreateSessionState } from "@/app/configuracion/types";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,7 @@ export function ScenarioConfigForm({
     ) => Promise<CreateSessionState>;
     initialState: CreateSessionState;
 }) {
-    const [state, formAction] = useFormState(action, initialState);
+    const [state, formAction] = useActionState(action, initialState);
 
     useEffect(() => {
         if (state.status === "success" && state.mocked) {
@@ -80,7 +79,7 @@ export function ScenarioConfigForm({
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="productName">Nombre del producto</Label>
+                            <Label htmlFor={productNameId}>Nombre del producto</Label>
                             <Input
                                 id={productNameId}
                                 name="productName"
@@ -89,7 +88,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="priceDetails">Precio y condiciones</Label>
+                            <Label htmlFor={priceDetailsId}>Precio y condiciones</Label>
                             <Input
                                 id={priceDetailsId}
                                 name="priceDetails"
@@ -100,7 +99,7 @@ export function ScenarioConfigForm({
                             </p>
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="description">Descripción breve</Label>
+                            <Label htmlFor={descriptionId}>Descripción breve</Label>
                             <textarea
                                 id={descriptionId}
                                 name="description"
@@ -110,7 +109,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="callObjective">Objetivo de la llamada</Label>
+                            <Label htmlFor={callObjectiveId}>Objetivo de la llamada</Label>
                             <Input
                                 id={callObjectiveId}
                                 name="callObjective"
@@ -119,7 +118,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="contactType">Tipo de contacto</Label>
+                            <Label htmlFor={contactTypeId}>Tipo de contacto</Label>
                             <select
                                 id={contactTypeId}
                                 name="contactType"
@@ -145,7 +144,7 @@ export function ScenarioConfigForm({
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="ageRange">Rango de edad</Label>
+                            <Label htmlFor={ageRangeId}>Rango de edad</Label>
                             <Input
                                 id={ageRangeId}
                                 name="ageRange"
@@ -154,11 +153,11 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="gender">Género (opcional)</Label>
+                            <Label htmlFor={genderId}>Género (opcional)</Label>
                             <Input id={genderId} name="gender" placeholder="Femenino" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="location">Ubicación</Label>
+                            <Label htmlFor={locationId}>Ubicación</Label>
                             <Input
                                 id={locationId}
                                 name="location"
@@ -167,7 +166,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="socioeconomicLevel">Nivel socioeconómico</Label>
+                            <Label htmlFor={socioeconomicLevelId}>Nivel socioeconómico</Label>
                             <Input
                                 id={socioeconomicLevelId}
                                 name="socioeconomicLevel"
@@ -176,7 +175,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="educationLevel">Nivel educativo</Label>
+                            <Label htmlFor={educationLevelId}>Nivel educativo</Label>
                             <Input
                                 id={educationLevelId}
                                 name="educationLevel"
@@ -185,7 +184,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="decisionStyle">Estilo de decisión</Label>
+                            <Label htmlFor={decisionStyleId}>Estilo de decisión</Label>
                             <Input
                                 id={decisionStyleId}
                                 name="decisionStyle"
@@ -194,7 +193,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="preferredChannel">Canal preferido</Label>
+                            <Label htmlFor={preferredChannelId}>Canal preferido</Label>
                             <Input
                                 id={preferredChannelId}
                                 name="preferredChannel"
@@ -203,7 +202,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="motivations">Motivaciones clave</Label>
+                            <Label htmlFor={motivationsId}>Motivaciones clave</Label>
                             <textarea
                                 id={motivationsId}
                                 name="motivations"
@@ -218,7 +217,7 @@ export function ScenarioConfigForm({
                             </p>
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="pains">Puntos de dolor</Label>
+                            <Label htmlFor={painsId}>Puntos de dolor</Label>
                             <textarea
                                 id={painsId}
                                 name="pains"
@@ -242,7 +241,7 @@ export function ScenarioConfigForm({
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="maxDurationMinutes">
+                            <Label htmlFor={maxDurationMinutesId}>
                                 Duración máxima (minutos)
                             </Label>
                             <Input
@@ -255,7 +254,7 @@ export function ScenarioConfigForm({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="allowHangups">Permitir colgar la llamada</Label>
+                            <Label htmlFor={allowHangupsId}>Permitir colgar la llamada</Label>
                             <div className="flex items-center gap-3 rounded-md border border-input px-3 py-2">
                                 <input
                                     type="checkbox"
@@ -270,7 +269,7 @@ export function ScenarioConfigForm({
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="clientIntensity">Intensidad del cliente</Label>
+                            <Label htmlFor={clientIntensityId}>Intensidad del cliente</Label>
                             <select
                                 id={clientIntensityId}
                                 name="clientIntensity"
@@ -284,7 +283,7 @@ export function ScenarioConfigForm({
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="realism">Realismo de la respuesta</Label>
+                            <Label htmlFor={realismId}>Realismo de la respuesta</Label>
                             <select
                                 id={realismId}
                                 name="realism"
