@@ -80,12 +80,12 @@ It references:
 
 ---
 
-### Step 6 — Simulation Page ⬚
-- ⬚ `/simulacion/[sessionId]`
-- ⬚ Chat interface
-- ⬚ Audio recorder
-- ⬚ ClientCard with hide/minimize options
-- ⬚ Bloqueada tras autenticación; carga sesión vinculada al usuario en Drizzle
+### Step 6 — Simulation Page ✅
+- ✅ `/simulacion/[sessionId]`
+- ✅ Chat interface
+- ✅ Audio recorder
+- ✅ ClientCard with hide/minimize options
+- ✅ Bloqueada tras autenticación; carga sesión vinculada al usuario en Drizzle
 
 ---
 
