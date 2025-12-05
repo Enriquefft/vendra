@@ -37,13 +37,11 @@ export function ClientCard({
 		useState<ClientCardVisibility>(initialVisibility);
 
 	const toggleMinimize = () => {
-		setVisibility((current) =>
-			current === "full"
-				? "minimized"
-				: current === "minimized"
-					? "full"
-					: current,
-		);
+		setVisibility((current) => {
+			if (current === "full") return "minimized";
+			if (current === "minimized") return "full";
+			return current;
+		});
 	};
 
 	const toggleHide = () => {

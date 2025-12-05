@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, User, Users } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -40,13 +40,17 @@ export function ChatMessages({
 }: ChatMessagesProps) {
 	const scrollRef = useRef<HTMLDivElement>(null);
 
-	// Auto-scroll to bottom when new messages arrive
-	// biome-ignore lint/correctness/useExhaustiveDependencies: scroll should trigger on messages/loading change
+	const scrollToBottom = useCallback(() => {
+		scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, []);
+
+	// Scroll to bottom when messages change or loading state toggles
+	// The dependencies trigger re-run even though they aren't read in the effect body
+	const messagesCount = messages.length;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentionally scroll when messagesCount or isLoading changes
 	useEffect(() => {
-		if (scrollRef.current) {
-			scrollRef.current.scrollIntoView({ behavior: "smooth" });
-		}
-	}, [messages.length, isLoading]);
+		scrollToBottom();
+	}, [messagesCount, isLoading, scrollToBottom]);
 
 	return (
 		<ScrollArea className={cn("flex-1", className)}>

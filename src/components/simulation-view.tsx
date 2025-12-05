@@ -154,10 +154,8 @@ export function SimulationView({
 				description: "Redirigiendo al análisis...",
 			});
 
-			// Redirect to results page
-			setTimeout(() => {
-				router.push(`/resultado/${sessionId}` as Route);
-			}, 1500);
+			// Redirect to results page immediately
+			router.replace(`/resultado/${sessionId}` as Route);
 		} catch (error) {
 			setStatus("active");
 			const message =
