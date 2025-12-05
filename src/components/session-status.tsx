@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 
 export type ConnectionStatus = "connected" | "connecting" | "disconnected";
 
+/** Threshold in seconds for showing "near end" warning (2 minutes) */
+const NEAR_END_WARNING_SECONDS = 120;
+
 export interface SessionStatusProps {
 	/** Session start time (for duration calculation) */
 	startTime?: Date;
@@ -112,7 +115,8 @@ function SessionTimer({
 
 	const maxSeconds = maxDurationMinutes ? maxDurationMinutes * 60 : null;
 	const remainingSeconds = maxSeconds ? maxSeconds - elapsedSeconds : null;
-	const isNearEnd = remainingSeconds !== null && remainingSeconds <= 120; // Less than 2 minutes
+	const isNearEnd =
+		remainingSeconds !== null && remainingSeconds <= NEAR_END_WARNING_SECONDS;
 	const isOverTime = remainingSeconds !== null && remainingSeconds < 0;
 
 	return (

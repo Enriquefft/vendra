@@ -117,7 +117,7 @@ export function SimulationView({
 				// Update seller message with real ID
 				setMessages((prev) =>
 					prev.map((msg) =>
-						msg.id === tempId || msg.id === sellerMessage.id
+						msg.id === sellerMessage.id
 							? { ...msg, id: result.sellerTurnId }
 							: msg,
 					),

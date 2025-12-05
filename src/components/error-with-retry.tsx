@@ -191,15 +191,18 @@ export function useErrorWithRetry<
 	const [errorType, setErrorType] = useState<ErrorType>("generic");
 	const [isRetrying, setIsRetrying] = useState(false);
 	const [retryCount, setRetryCount] = useState(0);
+	const [lastArgs, setLastArgs] = useState<Parameters<T> | null>(null);
 
 	const maxRetries = options?.maxRetries ?? 3;
 
 	const execute = useCallback(
 		async (...args: Parameters<T>) => {
 			setError(null);
+			setLastArgs(args);
 			try {
 				await action(...args);
 				setRetryCount(0);
+				setLastArgs(null);
 				options?.onSuccess?.();
 			} catch (err) {
 				const message =
@@ -219,13 +222,19 @@ export function useErrorWithRetry<
 			return;
 		}
 
+		if (!lastArgs) {
+			setError("No hay acción para reintentar.");
+			return;
+		}
+
 		setIsRetrying(true);
 		setRetryCount((prev) => prev + 1);
 
 		try {
-			await action();
+			await action(...lastArgs);
 			setError(null);
 			setRetryCount(0);
+			setLastArgs(null);
 			options?.onSuccess?.();
 		} catch (err) {
 			const message =
@@ -235,7 +244,7 @@ export function useErrorWithRetry<
 		} finally {
 			setIsRetrying(false);
 		}
-	}, [action, retryCount, maxRetries, options]);
+	}, [action, lastArgs, retryCount, maxRetries, options]);
 
 	const dismiss = useCallback(() => {
 		setError(null);
