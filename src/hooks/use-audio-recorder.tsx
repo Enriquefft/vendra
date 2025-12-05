@@ -42,11 +42,17 @@ export function useAudioRecorder(): UseAudioRecorderResult {
 			streamRef.current = stream;
 
 			// Determine the best supported MIME type
-			const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-				? "audio/webm;codecs=opus"
-				: MediaRecorder.isTypeSupported("audio/webm")
-					? "audio/webm"
-					: "audio/mp4";
+			let mimeType = "audio/webm";
+			if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+				mimeType = "audio/webm;codecs=opus";
+			} else if (MediaRecorder.isTypeSupported("audio/webm")) {
+				mimeType = "audio/webm";
+			} else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+				mimeType = "audio/mp4";
+			} else if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
+				mimeType = "audio/ogg;codecs=opus";
+			}
+			// If none supported, let browser pick default
 
 			const mediaRecorder = new MediaRecorder(stream, { mimeType });
 			mediaRecorderRef.current = mediaRecorder;

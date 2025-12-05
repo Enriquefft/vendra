@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Mic, Square } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -67,11 +67,13 @@ export function AudioRecorderButton({
 		}
 	}, [state, startRecording, stopRecording, onTranscription, onError]);
 
-	// Report hook errors to parent
-	if (error) {
-		onError?.(error);
-		clearError();
-	}
+	// Report hook errors to parent using useEffect to avoid render-loop issues
+	useEffect(() => {
+		if (error) {
+			onError?.(error);
+			clearError();
+		}
+	}, [error, onError, clearError]);
 
 	const isRecording = state === "recording";
 	const isProcessing = state === "processing";
