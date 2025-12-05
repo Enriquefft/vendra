@@ -118,11 +118,13 @@ async function createSessionAction(
 		}
 
 		const result = (await response.json()) as {
+			mocked?: boolean;
 			persona: PersonaProfile;
 			sessionId: string;
 		};
 
 		return {
+			mocked: result.mocked,
 			persona: result.persona,
 			sessionId: result.sessionId,
 			status: "success",

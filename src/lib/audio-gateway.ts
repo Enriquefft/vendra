@@ -1,4 +1,4 @@
-import { openai } from "./openai";
+import { createTranscription } from "./openai";
 
 /**
  * Transcribes audio using OpenAI's Whisper API.
@@ -11,15 +11,15 @@ import { openai } from "./openai";
 export async function transcribeAudio(
 	audioBlob: Blob,
 	fileName = "audio.webm",
-): Promise<string> {
+): Promise<{ text: string; usedMock: boolean }> {
 	// Convert Blob to File for OpenAI API
 	const file = new File([audioBlob], fileName, { type: audioBlob.type });
 
-	const transcription = await openai.audio.transcriptions.create({
+	const { isMock, transcription } = await createTranscription({
 		file,
 		language: "es",
 		model: "whisper-1",
 	});
 
-	return transcription.text;
+	return { text: transcription.text, usedMock: isMock };
 }

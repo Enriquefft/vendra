@@ -11,7 +11,7 @@ import {
 	type ScenarioConfig,
 	simulationSessions,
 } from "@/db/schema/simulation";
-import { openai } from "./openai";
+import { createChatCompletion } from "./openai";
 
 /**
  * Schema for key moments in the analysis.
@@ -69,7 +69,49 @@ export type AnalysisResult = {
 	keyMoments: KeyMoment[];
 	score: number;
 	successes: string[];
+	usedMock: boolean;
 };
+
+function buildMockAnalysisOutput(
+	persona: PersonaProfile,
+	scenario: ScenarioConfig,
+	turns: StoredConversationTurn[],
+): AnalysisOutput {
+	const sellerTurns = turns.filter((turn) => turn.role === "seller");
+	const clientTurns = turns.filter((turn) => turn.role === "client");
+	const baseScore =
+		70 + Math.min(10, sellerTurns.length) - Math.max(0, clientTurns.length - 5);
+
+	return {
+		improvements: [
+			{
+				action:
+					"Haz una pregunta adicional sobre las prioridades del cliente para personalizar mejor el valor.",
+				title: "Profundiza en necesidades",
+			},
+			{
+				action:
+					"Cierra cada bloque con un siguiente paso claro y confirma disponibilidad.",
+				title: "Marca el siguiente paso",
+			},
+		],
+		keyMoments: [
+			{
+				insight:
+					"La conversación avanzó y el cliente entendió el valor principal.",
+				quote: clientTurns.at(-1)?.content ?? "Quiero pensarlo un poco más.",
+				recommendation:
+					"Refuerza la urgencia con un beneficio claro y fecha límite.",
+				turnId: turns[turns.length - 1]?.id ?? "turno-final",
+			},
+		],
+		score: Math.max(55, Math.min(95, baseScore)),
+		successes: [
+			`Explicaste el valor de ${scenario.productName} de forma clara para ${persona.name}.`,
+			"Mantuviste el control de la llamada con preguntas guiadas.",
+		],
+	};
+}
 
 /**
  * Loads the persona for a given session.
@@ -277,15 +319,21 @@ export async function analyzeSession(
 	const userPrompt = buildAnalysisUserPrompt(persona, scenario, turns);
 
 	// Call OpenAI
-	const completion = await openai.chat.completions.create({
-		messages: [
-			{ content: systemPrompt, role: "system" },
-			{ content: userPrompt, role: "user" },
-		],
-		model: "gpt-4o-mini",
-		response_format: { type: "json_object" },
-		temperature: 0.7,
-	});
+	const { completion, isMock } = await createChatCompletion(
+		{
+			messages: [
+				{ content: systemPrompt, role: "system" },
+				{ content: userPrompt, role: "user" },
+			],
+			model: "gpt-4o-mini",
+			response_format: { type: "json_object" },
+			temperature: 0.7,
+		},
+		{
+			mockContent: () =>
+				JSON.stringify(buildMockAnalysisOutput(persona, scenario, turns)),
+		},
+	);
 
 	const content = completion.choices[0]?.message?.content;
 
@@ -305,6 +353,7 @@ export async function analyzeSession(
 		keyMoments: parsed.keyMoments,
 		score: parsed.score,
 		successes: parsed.successes,
+		usedMock: isMock,
 	};
 }
 
@@ -328,5 +377,6 @@ export async function getAnalysis(
 		keyMoments: analysis.keyMoments,
 		score: analysis.score,
 		successes: analysis.successes,
+		usedMock: false,
 	};
 }

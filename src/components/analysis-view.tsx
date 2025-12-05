@@ -232,10 +232,11 @@ export function AnalysisView({
 
 			const result = (await response.json()) as {
 				analysisId: string;
-				score: number;
-				successes: string[];
 				improvements: ImprovementItem[];
 				keyMoments: KeyMoment[];
+				mocked?: boolean;
+				score: number;
+				successes: string[];
 			};
 
 			setAnalysis({
@@ -245,6 +246,12 @@ export function AnalysisView({
 				score: result.score,
 				successes: result.successes,
 			});
+
+			if (result.mocked) {
+				toast.info("Modo simulado activo", {
+					description: "Generamos el análisis sin la API de OpenAI.",
+				});
+			}
 
 			toast.success("Análisis generado exitosamente");
 		} catch (error) {

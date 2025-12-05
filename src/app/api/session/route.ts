@@ -42,10 +42,10 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const persona = await generatePersona(scenarioConfig);
+		const personaResult = await generatePersona(scenarioConfig);
 
 		await db.insert(personaSnapshots).values({
-			persona,
+			persona: personaResult.persona,
 			sessionId: createdSession.id,
 		});
 
@@ -54,7 +54,11 @@ export async function POST(request: NextRequest) {
 			.set({ status: "active" })
 			.where(eq(simulationSessions.id, createdSession.id));
 
-		return NextResponse.json({ persona, sessionId: createdSession.id });
+		return NextResponse.json({
+			mocked: personaResult.usedMock,
+			persona: personaResult.persona,
+			sessionId: createdSession.id,
+		});
 	} catch (error) {
 		console.error(error);
 		return NextResponse.json(

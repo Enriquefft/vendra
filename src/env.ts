@@ -31,6 +31,6 @@ export const env = createEnv({
 		DRIZZLE_DATABASE_URL: z.string().url(),
 		GOOGLE_CLIENT_ID: z.string(),
 		GOOGLE_CLIENT_SECRET: z.string(),
-		OPENAI_API_KEY: z.string().min(1),
+		OPENAI_API_KEY: z.string().min(1).optional(),
 	},
 });

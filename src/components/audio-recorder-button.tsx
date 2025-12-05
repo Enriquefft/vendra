@@ -2,6 +2,7 @@
 
 import { Loader2, Mic, Square } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -85,7 +86,15 @@ export function AudioRecorderButton({
 					throw new Error(errorData?.error ?? "Error al transcribir el audio");
 				}
 
-				const data = (await response.json()) as { text: string };
+				const data = (await response.json()) as {
+					mocked?: boolean;
+					text: string;
+				};
+				if (data.mocked) {
+					toast.info("Modo simulado activo", {
+						description: "Transcribimos sin la API de OpenAI.",
+					});
+				}
 				onTranscription(data.text);
 			} catch (err) {
 				const message =

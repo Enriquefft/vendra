@@ -110,9 +110,16 @@ export function SimulationView({
 
 				const result = (await response.json()) as {
 					clientResponse: ClientResponse;
-					sellerTurnId: string;
 					clientTurnId: string;
+					mocked?: boolean;
+					sellerTurnId: string;
 				};
+
+				if (result.mocked) {
+					toast.info("Modo simulado activo", {
+						description: "Generamos respuestas sin usar la API de OpenAI.",
+					});
+				}
 
 				// Update seller message with real ID
 				setMessages((prev) =>

@@ -51,6 +51,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 			analysisId: result.analysisId,
 			improvements: result.improvements,
 			keyMoments: result.keyMoments,
+			mocked: result.usedMock,
 			score: result.score,
 			successes: result.successes,
 		});

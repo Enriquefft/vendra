@@ -31,9 +31,9 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const text = await transcribeAudio(audioFile);
+		const { text, usedMock } = await transcribeAudio(audioFile);
 
-		return NextResponse.json({ text });
+		return NextResponse.json({ mocked: usedMock, text });
 	} catch (error) {
 		console.error("STT Error:", error);
 		return NextResponse.json(

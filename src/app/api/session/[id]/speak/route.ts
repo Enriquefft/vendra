@@ -69,6 +69,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 		return NextResponse.json({
 			clientResponse: result.clientResponse,
 			clientTurnId: result.clientTurnId,
+			mocked: result.usedMock,
 			sellerTurnId: result.sellerTurnId,
 		});
 	} catch (error) {

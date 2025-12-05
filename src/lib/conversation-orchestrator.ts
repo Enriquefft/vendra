@@ -9,7 +9,7 @@ import {
 	type ScenarioConfig,
 	simulationSessions,
 } from "@/db/schema/simulation";
-import { openai } from "./openai";
+import { createChatCompletion } from "./openai";
 
 /**
  * Schema for the client response from the AI.
@@ -47,7 +47,31 @@ export type OrchestratorOutput = {
 	clientResponse: ClientResponse;
 	sellerTurnId: string;
 	clientTurnId: string;
+	usedMock: boolean;
 };
+
+function buildMockClientReply(
+	sellerText: string,
+	persona: PersonaProfile,
+	scenario: ScenarioConfig,
+	history: ConversationTurn[],
+): ClientResponse {
+	const trimmedSeller = sellerText.trim();
+	const turnInterest = Math.max(
+		3,
+		Math.min(9, 6 + Math.floor(history.length / 2)),
+	);
+
+	return {
+		clientText:
+			trimmedSeller.length > 0
+				? `${persona.name}: entiendo tu oferta sobre ${scenario.productName}. ${trimmedSeller.slice(0, 140)}`
+				: `${persona.name}: ¿podrías contarme más sobre ${scenario.productName}?`,
+		interest: turnInterest,
+		interruption: false,
+		wantsToEnd: false,
+	};
+}
 
 /**
  * Loads the persona for a given session.
@@ -274,12 +298,20 @@ export async function orchestrateConversation(
 	const messages = buildConversationMessages(systemPrompt, history, sellerText);
 
 	// Call OpenAI
-	const completion = await openai.chat.completions.create({
-		messages,
-		model: "gpt-4o-mini",
-		response_format: { type: "json_object" },
-		temperature: 0.8,
-	});
+	const { completion, isMock } = await createChatCompletion(
+		{
+			messages,
+			model: "gpt-4o-mini",
+			response_format: { type: "json_object" },
+			temperature: 0.8,
+		},
+		{
+			mockContent: () =>
+				JSON.stringify(
+					buildMockClientReply(sellerText, persona, scenario, history),
+				),
+		},
+	);
 
 	const content = completion.choices[0]?.message?.content;
 
@@ -309,5 +341,6 @@ export async function orchestrateConversation(
 		clientResponse: parsed,
 		clientTurnId,
 		sellerTurnId,
+		usedMock: isMock,
 	};
 }
