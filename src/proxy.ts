@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 const PUBLIC_PATHS = ["/login", "/api/auth", "/icon.png", "/favicon.ico"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	const pathname = request.nextUrl.pathname;
 
 	if (
