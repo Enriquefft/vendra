@@ -89,9 +89,9 @@ It references:
 
 ---
 
-### Step 7 — AnalysisEngine ⬚
-- ⬚ Implement scoring + checklists + key moments
-- ⬚ Endpoint `/api/session/[id]/analyze`
+### Step 7 — AnalysisEngine ✅
+- ✅ Implement scoring + checklists + key moments
+- ✅ Endpoint `/api/session/[id]/analyze`
 
 ---
 
