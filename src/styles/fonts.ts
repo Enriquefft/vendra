@@ -1,3 +1,10 @@
-import { Inter } from "next/font/google";
-
-export const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+// Use system fonts for better compatibility in CI environments
+// where Google Fonts may not be accessible
+export const inter = {
+	className: "font-sans",
+	style: {
+		fontFamily:
+			'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+	},
+	variable: "--font-sans",
+};

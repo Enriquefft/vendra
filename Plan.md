@@ -95,12 +95,12 @@ It references:
 
 ---
 
-### Step 8 — Results Page ⬚
-- ⬚ `/resultado/[sessionId]`
-- ⬚ Score visualization
-- ⬚ Aciertos / mejoras / momentos clave
-- ⬚ Persona summary
-- ⬚ Solo accesible con sesión activa y validación de pertenencia del usuario a la sesión
+### Step 8 — Results Page ✅
+- ✅ `/resultado/[sessionId]`
+- ✅ Score visualization
+- ✅ Aciertos / mejoras / momentos clave
+- ✅ Persona summary
+- ✅ Solo accesible con sesión activa y validación de pertenencia del usuario a la sesión
 
 ---
 
