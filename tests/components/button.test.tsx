@@ -6,9 +6,8 @@ describe("Button", () => {
 	test("renders children and button role", () => {
 		render(<Button>Visible Example</Button>);
 
-		expect(screen.getByText("Visible Example")).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: "Visible Example" }),
-		).toHaveTextContent("Visible Example");
+		expect(screen.getByText("Visible Example")).toBeDefined();
+		const button = screen.getByRole("button", { name: "Visible Example" });
+		expect(button.textContent).toContain("Visible Example");
 	});
 });

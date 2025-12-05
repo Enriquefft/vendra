@@ -142,14 +142,15 @@ describe("User flows", () => {
 
 		await user.click(screen.getByRole("button", { name: /Crear sesión/i }));
 
-		await waitFor(() =>
-			expect(screen.getByText(/Cliente generado/i)).toBeInTheDocument(),
-		);
+		await waitFor(() => {
+			expect(screen.queryByText(/Cliente generado/i)).toBeTruthy();
+		});
 		expect(createSessionCalls.length).toBeGreaterThan(0);
-		expect(
-			screen.getByRole("link", { name: /Ir a la simulación/i }),
-		).toHaveAttribute("href", "/simulacion/session-123");
-		expect(screen.getByText(personaFixture.name)).toBeInTheDocument();
+		const simulationLink = screen.getByRole("link", {
+			name: /Ir a la simulación/i,
+		});
+		expect(simulationLink.getAttribute("href")).toBe("/simulacion/session-123");
+		expect(screen.queryByText(personaFixture.name)).toBeTruthy();
 	});
 
 	test("Flow 2: send a message in simulation and finish the call", async () => {
@@ -198,14 +199,19 @@ describe("User flows", () => {
 		);
 
 		await waitFor(() => {
-			expect(screen.getByText("Mensaje de vendedor")).toBeInTheDocument();
-			expect(screen.getByText("Respuesta del cliente")).toBeInTheDocument();
+			expect(screen.queryByText("Mensaje de vendedor")).toBeTruthy();
+			expect(screen.queryByText("Respuesta del cliente")).toBeTruthy();
 		});
 
 		const endButtons = screen.getAllByRole("button", {
 			name: /Terminar llamada/i,
 		});
-		await user.click(endButtons[0]);
+		const firstEndButton = endButtons.at(0);
+		expect(firstEndButton).toBeDefined();
+		if (!firstEndButton) {
+			throw new Error("End call button not found");
+		}
+		await user.click(firstEndButton);
 		const dialog = await screen.findByRole("dialog");
 		await user.click(
 			within(dialog).getByRole("button", { name: /Terminar llamada/i }),
@@ -222,9 +228,9 @@ describe("User flows", () => {
 
 	test("Flow 3: generate and review the analysis", async () => {
 		const user = userEvent.setup();
-		const fetchCalls: Array<[RequestInfo | URL, RequestInit | undefined]> = [];
+		const fetchCalls: Array<Parameters<typeof fetch>> = [];
 		global.fetch = (async (...args) => {
-			fetchCalls.push(args);
+			fetchCalls.push(args as Parameters<typeof fetch>);
 			return new Response(
 				JSON.stringify({
 					analysisId: "analysis-1",
@@ -264,19 +270,18 @@ describe("User flows", () => {
 		await user.click(screen.getByRole("button", { name: /Generar análisis/i }));
 
 		await waitFor(() => {
-			expect(screen.getByText("88")).toBeInTheDocument();
-			expect(screen.getByText(/Aciertos \(1\)/i)).toBeInTheDocument();
-			expect(
-				screen.getByText(/Oportunidades de mejora \(1\)/i),
-			).toBeInTheDocument();
-			expect(screen.getByText(/Momentos clave \(1\)/i)).toBeInTheDocument();
+			expect(screen.queryByText("88")).toBeTruthy();
+			expect(screen.queryByText(/Aciertos \(1\)/i)).toBeTruthy();
+			expect(screen.queryByText(/Oportunidades de mejora \(1\)/i)).toBeTruthy();
+			expect(screen.queryByText(/Momentos clave \(1\)/i)).toBeTruthy();
 		});
 
-		expect(screen.getByText(/Generó confianza al inicio/i)).toBeInTheDocument();
-		expect(screen.getByText(/Respondió con empatía/i)).toBeInTheDocument();
-		expect(
-			screen.getByRole("link", { name: /Nueva simulación/i }),
-		).toHaveAttribute("href", "/configuracion");
+		expect(screen.queryByText(/Generó confianza al inicio/i)).toBeTruthy();
+		expect(screen.queryByText(/Respondió con empatía/i)).toBeTruthy();
+		const newSimulationLink = screen.getByRole("link", {
+			name: /Nueva simulación/i,
+		});
+		expect(newSimulationLink.getAttribute("href")).toBe("/configuracion");
 		expect(fetchCalls.length).toBeGreaterThan(0);
 	});
 });

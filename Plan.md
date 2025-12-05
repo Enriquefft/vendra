@@ -119,8 +119,8 @@ It references:
 
 ---
 
-### Step 11 — E2E Tests 🚧
-- 🚧 Playwright/Cypress
+### Step 11 — E2E Tests ✅
+- ✅ Playwright/Cypress
 - ✅ User-flow regression coverage for configuración → simulación → resultado
 
 ---
