@@ -71,12 +71,12 @@ It references:
 
 ---
 
-### Step 5 — ConversationOrchestrator ⬚
-- ⬚ Load persona + history
-- ⬚ Build prompt
-- ⬚ Insert seller + client turns
-- ⬚ Handle client-ending logic
-- ⬚ Route: `/api/session/[id]/speak`
+### Step 5 — ConversationOrchestrator ✅
+- ✅ Load persona + history
+- ✅ Build prompt
+- ✅ Insert seller + client turns
+- ✅ Handle client-ending logic
+- ✅ Route: `/api/session/[id]/speak`
 
 ---
 
