@@ -2,6 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
+import { useId } from "react";
 import { useFormState } from "react-dom";
 
 import type { CreateSessionState } from "@/app/configuracion/types";
@@ -40,6 +41,25 @@ export function ScenarioConfigForm({
 }) {
 	const [state, formAction] = useFormState(action, initialState);
 
+	const productNameId = useId();
+	const priceDetailsId = useId();
+	const descriptionId = useId();
+	const callObjectiveId = useId();
+	const contactTypeId = useId();
+	const ageRangeId = useId();
+	const genderId = useId();
+	const locationId = useId();
+	const socioeconomicLevelId = useId();
+	const educationLevelId = useId();
+	const decisionStyleId = useId();
+	const preferredChannelId = useId();
+	const motivationsId = useId();
+	const painsId = useId();
+	const maxDurationMinutesId = useId();
+	const allowHangupsId = useId();
+	const clientIntensityId = useId();
+	const realismId = useId();
+
 	return (
 		<div className="space-y-6">
 			<form action={formAction} className="space-y-6">
@@ -54,7 +74,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="productName">Nombre del producto</Label>
 							<Input
-								id="productName"
+								id={productNameId}
 								name="productName"
 								placeholder="Seguro de salud familiar"
 								required
@@ -63,7 +83,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="priceDetails">Precio y condiciones</Label>
 							<Input
-								id="priceDetails"
+								id={priceDetailsId}
 								name="priceDetails"
 								placeholder="USD 25/mes, incluye cobertura dental"
 							/>
@@ -74,7 +94,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2 md:col-span-2">
 							<Label htmlFor="description">Descripción breve</Label>
 							<textarea
-								id="description"
+								id={descriptionId}
 								name="description"
 								className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 								placeholder="Cobertura integral que combina telemedicina, consultas presenciales y descuentos en farmacias en todo el Perú."
@@ -84,7 +104,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2 md:col-span-2">
 							<Label htmlFor="callObjective">Objetivo de la llamada</Label>
 							<Input
-								id="callObjective"
+								id={callObjectiveId}
 								name="callObjective"
 								placeholder="Cerrar la venta con pago con tarjeta en la llamada"
 								required
@@ -93,7 +113,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="contactType">Tipo de contacto</Label>
 							<select
-								id="contactType"
+								id={contactTypeId}
 								name="contactType"
 								className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 								defaultValue="cold_call"
@@ -119,7 +139,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="ageRange">Rango de edad</Label>
 							<Input
-								id="ageRange"
+								id={ageRangeId}
 								name="ageRange"
 								placeholder="30-45"
 								required
@@ -127,12 +147,12 @@ export function ScenarioConfigForm({
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="gender">Género (opcional)</Label>
-							<Input id="gender" name="gender" placeholder="Femenino" />
+							<Input id={genderId} name="gender" placeholder="Femenino" />
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="location">Ubicación</Label>
 							<Input
-								id="location"
+								id={locationId}
 								name="location"
 								placeholder="Lima Metropolitana"
 								required
@@ -141,7 +161,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="socioeconomicLevel">Nivel socioeconómico</Label>
 							<Input
-								id="socioeconomicLevel"
+								id={socioeconomicLevelId}
 								name="socioeconomicLevel"
 								placeholder="B/C"
 								required
@@ -150,7 +170,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="educationLevel">Nivel educativo</Label>
 							<Input
-								id="educationLevel"
+								id={educationLevelId}
 								name="educationLevel"
 								placeholder="Técnico o universitario incompleto"
 								required
@@ -159,7 +179,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="decisionStyle">Estilo de decisión</Label>
 							<Input
-								id="decisionStyle"
+								id={decisionStyleId}
 								name="decisionStyle"
 								placeholder="Busca comparaciones y referencias"
 								required
@@ -168,7 +188,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="preferredChannel">Canal preferido</Label>
 							<Input
-								id="preferredChannel"
+								id={preferredChannelId}
 								name="preferredChannel"
 								placeholder="Whatsapp y correo"
 								required
@@ -177,7 +197,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2 md:col-span-2">
 							<Label htmlFor="motivations">Motivaciones clave</Label>
 							<textarea
-								id="motivations"
+								id={motivationsId}
 								name="motivations"
 								className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 								placeholder={
@@ -192,7 +212,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2 md:col-span-2">
 							<Label htmlFor="pains">Puntos de dolor</Label>
 							<textarea
-								id="pains"
+								id={painsId}
 								name="pains"
 								className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 								placeholder={
@@ -219,7 +239,7 @@ export function ScenarioConfigForm({
 							</Label>
 							<Input
 								type="number"
-								id="maxDurationMinutes"
+								id={maxDurationMinutesId}
 								name="maxDurationMinutes"
 								min={1}
 								defaultValue={8}
@@ -231,7 +251,7 @@ export function ScenarioConfigForm({
 							<div className="flex items-center gap-3 rounded-md border border-input px-3 py-2">
 								<input
 									type="checkbox"
-									id="allowHangups"
+									id={allowHangupsId}
 									name="allowHangups"
 									defaultChecked
 									className="h-4 w-4"
@@ -244,7 +264,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="clientIntensity">Intensidad del cliente</Label>
 							<select
-								id="clientIntensity"
+								id={clientIntensityId}
 								name="clientIntensity"
 								className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 								defaultValue="neutro"
@@ -258,7 +278,7 @@ export function ScenarioConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="realism">Realismo de la respuesta</Label>
 							<select
-								id="realism"
+								id={realismId}
 								name="realism"
 								className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 								defaultValue="humano"
