@@ -65,9 +65,9 @@ It references:
 
 ---
 
-### Step 4 — AudioGateway (STT) ⬚
-- ⬚ Implement audio recording + Whisper API
-- ⬚ Create `/api/stt`
+### Step 4 — AudioGateway (STT) ✅
+- ✅ Implement audio recording + Whisper API
+- ✅ Create `/api/stt`
 
 ---
 
