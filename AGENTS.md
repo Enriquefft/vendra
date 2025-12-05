@@ -309,6 +309,60 @@ Even if you’re not literally opening a GitHub PR, follow these practices:
 
 * Keep `Plan.md` current: when you complete and test a section, mark it as done in the plan so future agents can see progress at a glance.
 
+---
+
+## 9.1. Keeping Plan.md Up to Date
+
+`Plan.md` uses status markers to track implementation progress. When working on features:
+
+### Status Legend
+
+* **✅** = Implemented & Tested (code merged, tests pass, feature verified)
+* **🚧** = In Progress (actively being worked on)
+* **⬚** = Not Started (pending implementation)
+
+### Update Rules
+
+1. **Before starting work** on a step:
+   * Change the step's marker from ⬚ to 🚧
+   * Add 🚧 markers to the specific sub-items you're working on
+
+2. **After completing and testing** a step:
+   * Change the step's marker from 🚧 to ✅
+   * Change all sub-items to ✅
+   * Ensure tests pass (`bun test`) and the feature is verified
+
+3. **When committing changes**:
+   * Include `Plan.md` updates in the same commit as the feature code
+   * Reference the step number in your commit message (e.g., "feat: implement Step 4 — AudioGateway")
+
+4. **Partial progress**:
+   * If you complete some sub-items but not all, mark individual sub-items accordingly
+   * The parent step remains 🚧 until all sub-items are ✅
+
+### Example
+
+Before:
+```md
+### Step 4 — AudioGateway (STT) ⬚
+- ⬚ Implement audio recording + Whisper API
+- ⬚ Create `/api/stt`
+```
+
+In progress:
+```md
+### Step 4 — AudioGateway (STT) 🚧
+- 🚧 Implement audio recording + Whisper API
+- ⬚ Create `/api/stt`
+```
+
+Completed:
+```md
+### Step 4 — AudioGateway (STT) ✅
+- ✅ Implement audio recording + Whisper API
+- ✅ Create `/api/stt`
+```
+
 Example PR description:
 
 > feat: add analysis page layout
