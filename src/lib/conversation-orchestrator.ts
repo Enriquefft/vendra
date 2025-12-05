@@ -93,19 +93,13 @@ async function loadConversationHistory(
  * Gets the next turn index for a session.
  */
 async function getNextTurnIndex(sessionId: string): Promise<number> {
-	const lastTurn = await db.query.conversationTurns.findFirst({
-		orderBy: [asc(conversationTurns.turnIndex)],
-		where: eq(conversationTurns.sessionId, sessionId),
-	});
-
-	if (!lastTurn) {
-		return 0;
-	}
-
-	// Get the highest turn index
 	const allTurns = await db.query.conversationTurns.findMany({
 		where: eq(conversationTurns.sessionId, sessionId),
 	});
+
+	if (allTurns.length === 0) {
+		return 0;
+	}
 
 	const maxIndex = Math.max(...allTurns.map((t) => t.turnIndex));
 	return maxIndex + 1;
