@@ -71,7 +71,7 @@ function truncateText(text: string, maxLength: number): string {
 export interface AnalysisViewProps {
 	sessionId: string;
 	analysis: AnalysisData | null;
-	persona: PersonaProfile;
+	persona: PersonaProfile | null;
 	scenarioConfig: ScenarioConfig;
 	turns: ConversationTurn[];
 	className?: string;
@@ -302,9 +302,11 @@ export function AnalysisView({
 				</div>
 
 				{/* Still show persona summary even without analysis */}
-				<div className="mx-auto max-w-md">
-					<PersonaSummary persona={persona} />
-				</div>
+				{persona && (
+					<div className="mx-auto max-w-md">
+						<PersonaSummary persona={persona} />
+					</div>
+				)}
 			</div>
 		);
 	}
@@ -348,7 +350,7 @@ export function AnalysisView({
 					</Card>
 
 					{/* Persona summary */}
-					<PersonaSummary persona={persona} />
+					{persona && <PersonaSummary persona={persona} />}
 
 					{/* Scenario info */}
 					<Card>

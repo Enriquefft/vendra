@@ -49,6 +49,7 @@ async function createSessionAction(
 			allowHangups: formData.get("allowHangups") === "on",
 			clientIntensity: (formData.get("clientIntensity") ??
 				"neutro") as ScenarioConfigInput["simulationPreferences"]["clientIntensity"],
+			deleteAfterAnalysis: formData.get("deleteAfterAnalysis") === "on",
 			maxDurationMinutes: Number(formData.get("maxDurationMinutes") ?? 0),
 			realism: (formData.get("realism") ??
 				"humano") as ScenarioConfigInput["simulationPreferences"]["realism"],

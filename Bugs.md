@@ -24,8 +24,8 @@ _No bugs currently tracked._
 
 ### [BUG-001] Persona has unauthorized product knowledge in cold call scenarios
 
-**Status:** 🟢 | ✅
-**Severity:** Critical
+**Status:** ✅
+**Severity:** Critical (Fixed)
 **Component:** AI/ConversationOrchestrator
 **Reported:** 2025-12-05
 **Fixed:** 2025-12-05

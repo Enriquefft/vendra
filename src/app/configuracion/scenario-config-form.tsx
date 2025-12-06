@@ -66,6 +66,7 @@ export function ScenarioConfigForm({
 	const allowHangupsId = useId();
 	const clientIntensityId = useId();
 	const realismId = useId();
+	const deleteAfterAnalysisId = useId();
 
 	return (
 		<div className="space-y-6">
@@ -295,6 +296,29 @@ export function ScenarioConfigForm({
 								<option value="humano">Humano</option>
 								<option value="exigente">Exigente</option>
 							</select>
+						</div>
+						<div className="space-y-2 md:col-span-2">
+							<Label htmlFor={deleteAfterAnalysisId}>
+								Privacidad de datos
+							</Label>
+							<div className="flex items-center gap-3 rounded-md border border-input px-3 py-2">
+								<input
+									type="checkbox"
+									id={deleteAfterAnalysisId}
+									name="deleteAfterAnalysis"
+									className="h-4 w-4"
+								/>
+								<div className="flex-1">
+									<span className="text-sm font-medium">
+										Eliminar conversación después del análisis
+									</span>
+									<p className="text-sm text-muted-foreground">
+										Las conversaciones se borrarán automáticamente tras generar
+										el informe. Solo se conservará el puntaje y resumen del
+										análisis.
+									</p>
+								</div>
+							</div>
 						</div>
 					</CardContent>
 					<CardContent>

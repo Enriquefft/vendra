@@ -30,6 +30,8 @@ export async function POST(request: NextRequest) {
 		const [createdSession] = await db
 			.insert(simulationSessions)
 			.values({
+				deleteAfterAnalysis:
+					scenarioConfig.simulationPreferences.deleteAfterAnalysis ?? false,
 				scenarioConfig,
 				userId: session.user.id,
 			})

@@ -1,5 +1,12 @@
 import { sql } from "drizzle-orm";
-import { integer, jsonb, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	integer,
+	jsonb,
+	text,
+	timestamp,
+	uuid,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth.ts";
 import { schema } from "./schema.ts";
 
@@ -37,12 +44,16 @@ export type ScenarioConfig = {
 		clientIntensity: "tranquilo" | "neutro" | "dificil";
 		realism: "natural" | "humano" | "exigente";
 		allowHangups: boolean;
+		deleteAfterAnalysis?: boolean;
 	};
 };
 
 export const simulationSessions = schema.table("simulation_session", {
 	createdAt: timestamp("created_at", { withTimezone: false })
 		.defaultNow()
+		.notNull(),
+	deleteAfterAnalysis: boolean("delete_after_analysis")
+		.default(false)
 		.notNull(),
 	endedAt: timestamp("ended_at", { withTimezone: false }),
 	id: uuid("id").defaultRandom().primaryKey(),

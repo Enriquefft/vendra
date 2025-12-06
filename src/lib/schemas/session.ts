@@ -11,6 +11,7 @@ export const scenarioConfigSchema = z.object({
 	simulationPreferences: z.object({
 		allowHangups: z.boolean(),
 		clientIntensity: z.enum(["tranquilo", "neutro", "dificil"]),
+		deleteAfterAnalysis: z.boolean().optional(),
 		maxDurationMinutes: z.number().int().positive(),
 		realism: z.enum(["natural", "humano", "exigente"]),
 	}),

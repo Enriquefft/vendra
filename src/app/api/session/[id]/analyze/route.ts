@@ -2,7 +2,11 @@ import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { simulationSessions } from "@/db/schema/simulation";
+import {
+	conversationTurns,
+	personaSnapshots,
+	simulationSessions,
+} from "@/db/schema/simulation";
 import { analyzeSession, getAnalysis } from "@/lib/analysis-engine";
 
 type RouteParams = {
@@ -47,11 +51,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 	try {
 		const result = await analyzeSession({ sessionId });
 
+		// If privacy mode is enabled, delete conversation data
+		if (simulationSession.deleteAfterAnalysis) {
+			await db
+				.delete(conversationTurns)
+				.where(eq(conversationTurns.sessionId, sessionId));
+			await db
+				.delete(personaSnapshots)
+				.where(eq(personaSnapshots.sessionId, sessionId));
+		}
+
 		return NextResponse.json({
 			analysisId: result.analysisId,
 			improvements: result.improvements,
 			keyMoments: result.keyMoments,
 			mocked: result.usedMock,
+			privacyModeEnabled: simulationSession.deleteAfterAnalysis,
 			score: result.score,
 			successes: result.successes,
 		});

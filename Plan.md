@@ -133,15 +133,15 @@ It references:
 
 ---
 
-### Step 12 — Data Privacy Options ⬚
-- ⬚ “Delete conversation after analysis” mode
+### Step 12 — Data Privacy Options ✅
+- ✅ "Delete conversation after analysis" mode
 
 ---
 
-### Step 13 — Documentation & Refactor ⬚
-- ⬚ Create ARCHITECTURE.md
-- ⬚ Update Agents.md
-- ⬚ Ensure bugs.md is consistent
+### Step 13 — Documentation & Refactor ✅
+- ✅ Create ARCHITECTURE.md
+- ✅ Update Agents.md
+- ✅ Ensure bugs.md is consistent
 
 ---
 
