@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 VENDRA is a voice-based P2C sales training simulator. Salespeople configure scenarios, practice calls with AI-driven personas via voice input, and receive post-call analysis with scores and feedback.
 
-**Tech Stack:** Next.js 16 (App Router), TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM, PostgreSQL, Better Auth (Google OAuth), OpenAI APIs.
+**Tech Stack:** Next.js 16 (App Router), TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM, PostgreSQL, Better Auth (Google OAuth), AI Provider Layer (OpenAI/Anthropic/Mock via Vercel AI SDK).
 
 ## Common Commands
 
@@ -43,11 +43,12 @@ bun run build && bun run lint && bun test
 
 ### Core Backend Modules (src/lib/)
 
-- **PersonaEngine** (`persona-engine.ts`): Generates realistic client personas from scenario config using OpenAI
+- **AI Provider Layer** (`ai/`): Flexible abstraction supporting OpenAI, Anthropic, and Mock providers via Vercel AI SDK
+- **PersonaEngine** (`persona-engine.ts`): Generates realistic client personas from scenario config using AI Provider Layer
 - **ConversationOrchestrator** (`conversation-orchestrator.ts`): Manages conversation flow, loads persona + history, generates client responses
 - **AnalysisEngine** (`analysis-engine.ts`): Post-call analysis producing scores (0-100), successes, improvements, key moments
-- **AudioGateway** (`audio-gateway.ts`): STT via OpenAI Whisper
-- **OpenAI client** (`openai.ts`): Shared OpenAI SDK instance
+- **AudioGateway** (`audio-gateway.ts`): STT via AI Provider Layer (OpenAI Whisper or AssemblyAI based on provider)
+- **OpenAI client** (`openai.ts`): **DEPRECATED** - Use `ai/` instead
 
 ### API Routes (src/app/api/)
 
@@ -88,8 +89,30 @@ Read these files for detailed context:
 
 ## Important Rules
 
-- **OpenAI is the only AI provider** — No other AI services
+- **AI Provider Layer** — Supports OpenAI, Anthropic, and Mock providers. Configure via `AI_PROVIDER` environment variable.
 - **No Python** — All backend logic in TypeScript/Node.js
 - **Update Plan.md** when completing features (change ⬚ → 🚧 → ✅)
 - **Log bugs in Bugs.md** with severity and status
 - All routes are protected — unauthenticated users redirect to Google login
+
+## AI Provider Configuration
+
+The system uses a flexible AI provider abstraction layer:
+
+**Environment Variables:**
+- `AI_PROVIDER` - Choose provider: "openai" (default), "anthropic", or "mock"
+- `AI_CHAT_MODEL` - Optional: Override default chat model
+- `AI_STT_MODEL` - Optional: Override default STT model
+- `OPENAI_API_KEY` - Required for OpenAI provider
+- `ANTHROPIC_API_KEY` - Required for Anthropic provider
+- `ASSEMBLYAI_API_KEY` - Required for STT when using Anthropic
+
+**Provider Behavior:**
+- OpenAI: Uses gpt-4o-mini for chat, Whisper for STT
+- Anthropic: Uses claude-3-5-haiku-20241022 for chat, AssemblyAI for STT
+- Mock: For testing without API keys
+
+**Key Functions** (from `src/lib/ai/`):
+- `completeJson<T>(options, schema, mockOptions)` - Structured JSON output
+- `complete(options, mockOptions)` - Text completion
+- `transcribe(audioBlob, options)` - Audio transcription

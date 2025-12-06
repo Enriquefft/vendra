@@ -1,8 +1,12 @@
-import { createTranscription } from "./openai";
+import { transcribe } from "./ai";
 
 /**
- * Transcribes audio using OpenAI's Whisper API.
+ * Transcribes audio using the configured STT provider.
  * This is the core of the AudioGateway module.
+ *
+ * - When AI_PROVIDER=openai: uses OpenAI Whisper
+ * - When AI_PROVIDER=anthropic: uses AssemblyAI
+ * - When AI_PROVIDER=mock: uses mock transcription
  *
  * @param audioBlob - The audio blob to transcribe
  * @param fileName - Optional filename for the audio (defaults to "audio.webm")
@@ -12,14 +16,10 @@ export async function transcribeAudio(
 	audioBlob: Blob,
 	fileName = "audio.webm",
 ): Promise<{ text: string; usedMock: boolean }> {
-	// Convert Blob to File for OpenAI API
-	const file = new File([audioBlob], fileName, { type: audioBlob.type });
-
-	const { isMock, transcription } = await createTranscription({
-		file,
+	const { text, isMock } = await transcribe(audioBlob, {
+		fileName,
 		language: "es",
-		model: "whisper-1",
 	});
 
-	return { text: transcription.text, usedMock: isMock };
+	return { text, usedMock: isMock };
 }

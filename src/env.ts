@@ -16,6 +16,11 @@ export const env = createEnv({
 	emptyStringAsUndefined: false,
 	extends: [vercel()],
 	runtimeEnv: {
+		AI_CHAT_MODEL: process.env["AI_CHAT_MODEL"],
+		AI_PROVIDER: process.env["AI_PROVIDER"],
+		AI_STT_MODEL: process.env["AI_STT_MODEL"],
+		ANTHROPIC_API_KEY: process.env["ANTHROPIC_API_KEY"],
+		ASSEMBLYAI_API_KEY: process.env["ASSEMBLYAI_API_KEY"],
 		BETTER_AUTH_SECRET: process.env["BETTER_AUTH_SECRET"],
 		BETTER_AUTH_URL: process.env["BETTER_AUTH_URL"],
 		DRIZZLE_DATABASE_URL: process.env["DRIZZLE_DATABASE_URL"],
@@ -26,6 +31,11 @@ export const env = createEnv({
 		OPENAI_API_KEY: process.env["OPENAI_API_KEY"],
 	},
 	server: {
+		AI_CHAT_MODEL: z.string().optional(),
+		AI_PROVIDER: z.enum(["openai", "anthropic", "mock"]).default("openai"),
+		AI_STT_MODEL: z.string().optional(),
+		ANTHROPIC_API_KEY: z.string().min(1).optional(),
+		ASSEMBLYAI_API_KEY: z.string().min(1).optional(),
 		BETTER_AUTH_SECRET: z.string().min(32),
 		BETTER_AUTH_URL: z.string().url().default(url),
 		DRIZZLE_DATABASE_URL: z.string().url(),

@@ -9,7 +9,7 @@ import {
 	type ScenarioConfig,
 	simulationSessions,
 } from "@/db/schema/simulation";
-import { createChatCompletion } from "./openai";
+import { completeJson } from "./ai";
 
 /**
  * Schema for the client response from the AI.
@@ -297,14 +297,13 @@ export async function orchestrateConversation(
 	const systemPrompt = buildSystemPrompt(persona, scenario);
 	const messages = buildConversationMessages(systemPrompt, history, sellerText);
 
-	// Call OpenAI
-	const { completion, isMock } = await createChatCompletion(
+	// Call AI provider
+	const { object: parsed, isMock } = await completeJson(
 		{
 			messages,
-			model: "gpt-4o-mini",
-			response_format: { type: "json_object" },
 			temperature: 0.8,
 		},
+		clientResponseSchema,
 		{
 			mockContent: () =>
 				JSON.stringify(
@@ -312,15 +311,6 @@ export async function orchestrateConversation(
 				),
 		},
 	);
-
-	const content = completion.choices[0]?.message?.content;
-
-	if (!content) {
-		throw new Error("No se recibió respuesta del modelo de OpenAI");
-	}
-
-	// Parse and validate response
-	const parsed = clientResponseSchema.parse(JSON.parse(content));
 
 	// Insert client turn with metadata
 	const clientMeta: ConversationTurnMeta = {

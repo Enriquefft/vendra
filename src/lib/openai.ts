@@ -1,3 +1,25 @@
+/**
+ * @deprecated This module is deprecated. Please use @/lib/ai instead.
+ *
+ * Migration guide:
+ * - Replace `createChatCompletion()` with `completeJson()` from @/lib/ai
+ * - Replace `createTranscription()` with `transcribe()` from @/lib/ai
+ *
+ * The new AI layer supports multiple providers (OpenAI, Anthropic, Mock)
+ * and is configured via the AI_PROVIDER environment variable.
+ *
+ * Example:
+ * ```typescript
+ * // OLD
+ * import { createChatCompletion } from "@/lib/openai";
+ * const { completion, isMock } = await createChatCompletion(...);
+ *
+ * // NEW
+ * import { completeJson } from "@/lib/ai";
+ * const { object, isMock } = await completeJson(..., schema, mockOptions);
+ * ```
+ */
+
 import OpenAI from "openai";
 
 import { env } from "@/env";

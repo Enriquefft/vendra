@@ -1,6 +1,6 @@
 import type { PersonaProfile, ScenarioConfig } from "@/db/schema/simulation";
 import { personaProfileSchema } from "@/lib/schemas/session";
-import { createChatCompletion } from "./openai";
+import { completeJson } from "./ai";
 
 function buildMockPersona(config: ScenarioConfig): PersonaProfile {
 	return {
@@ -60,16 +60,15 @@ Escenario de venta: ${JSON.stringify(config, null, 2)}
 - Alinea motivaciones y dolores con el producto y el objetivo de la llamada.
 - Personalidad psicológica debe ser coherente con la intensidad del cliente.
 - Usa español neutro. No incluyas texto adicional fuera del JSON.`;
-	const { completion, isMock } = await createChatCompletion(
+	const { object, isMock } = await completeJson(
 		{
 			messages: [
 				{ content: systemPrompt, role: "system" },
 				{ content: userPrompt, role: "user" },
 			],
-			model: "gpt-4o-mini",
-			response_format: { type: "json_object" },
 			temperature: 0.9,
 		},
+		personaProfileSchema,
 		{
 			mockContent: () =>
 				JSON.stringify(
@@ -85,12 +84,5 @@ Escenario de venta: ${JSON.stringify(config, null, 2)}
 		},
 	);
 
-	const content = completion.choices[0]?.message?.content;
-
-	if (!content) {
-		throw new Error("No se recibió una respuesta válida del modelo de OpenAI");
-	}
-
-	const parsed = personaProfileSchema.parse(JSON.parse(content));
-	return { persona: parsed, usedMock: isMock };
+	return { persona: object, usedMock: isMock };
 }

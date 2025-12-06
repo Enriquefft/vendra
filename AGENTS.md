@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for coding agents working on **VENDRA**, a voice-based P2C sales training platform built with **Next.js**, **TypeScript**, **Tailwind CSS**, **shadcn/ui**, **Drizzle ORM**, **Postgres**, and **OpenAI APIs**.
+Guidance for coding agents working on **VENDRA**, a voice-based P2C sales training platform built with **Next.js**, **TypeScript**, **Tailwind CSS**, **shadcn/ui**, **Drizzle ORM**, **Postgres**, and **AI Provider Layer** (OpenAI/Anthropic via Vercel AI SDK).
 
 This file complements the project docs:
 
@@ -21,8 +21,8 @@ If anything in this file conflicts with explicit user instructions in chat, the 
 VENDRA is a web app that:
 
 - Lets a **salesperson** configure a sales scenario (product, target, type of call).
-- Simulates a **realistic client** using OpenAI (client responds in text).
-- Captures the salesperson’s **voice** and transcribes it via OpenAI STT.
+- Simulates a **realistic client** using AI Provider Layer (client responds in text).
+- Captures the salesperson's **voice** and transcribes it via AI Provider Layer STT.
 - Runs a **post-call analysis** (score 0–100, successes, improvement points, key moments).
 - Stores minimal data in Postgres via **Drizzle ORM**.
 
@@ -30,7 +30,7 @@ Key constraints:
 
 - All core logic is **TypeScript** in a **Next.js App Router** project.
 - Backend is **Node.js + TS only** (no Python for the MVP).
-- OpenAI is the only AI provider.
+- AI Provider Layer supports OpenAI, Anthropic, and Mock providers (configured via `AI_PROVIDER` env var).
 - UI uses **Tailwind CSS** + **shadcn/ui** and must follow the brand defined in `Branding.md`.
 
 If you need context about features or UX, read `Requirements.md`, `Architecture.md`, and `LandingMockup.md` first.

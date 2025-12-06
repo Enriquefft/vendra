@@ -12,7 +12,12 @@
 			"Bash({ sleep 60)",
 			"Bash(})",
 			"Bash(bunx drizzle-kit push:*)",
-			"Bash(timeout 180 bunx drizzle-kit push:*)"
+			"Bash(timeout 180 bunx drizzle-kit push:*)",
+			"Bash(cat:*)",
+			"WebSearch",
+			"WebFetch(domain:ai-sdk.dev)",
+			"Bash(bun add:*)",
+			"Bash(bunx ai-sdk:*)"
 		],
 		"ask": [],
 		"deny": []

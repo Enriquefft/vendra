@@ -30,7 +30,7 @@ Frontend:
 Backend:
 - Next.js Route Handlers + Server Actions
 - Node.js + TypeScript
-- OpenAI SDK (chat + audio)
+- AI Provider Layer (supports OpenAI, Anthropic, Mock)
 - Drizzle ORM + Postgres
 - Better Auth (Google OAuth provider)
 
@@ -40,15 +40,49 @@ Deployment:
 
 ---
 
+# 2.5. AI Provider Layer
+
+VENDRA uses a flexible AI provider abstraction layer built on **Vercel AI SDK** that supports multiple providers:
+
+**Supported Providers:**
+- **OpenAI**: Uses `gpt-4o-mini` for chat completions and `whisper-1` for STT
+- **Anthropic**: Uses `claude-3-5-haiku-20241022` for chat completions and AssemblyAI for STT
+- **Mock**: For testing without API keys
+
+**Provider Selection:**
+Set via `AI_PROVIDER` environment variable ("openai" | "anthropic" | "mock")
+
+**STT Provider Logic:**
+- OpenAI → OpenAI Whisper
+- Anthropic → AssemblyAI (fully decoupled from OpenAI)
+- Mock → Mock transcription
+
+**Implementation:**
+- `src/lib/ai/index.ts` - Main entry point
+- `src/lib/ai/config.ts` - Provider configuration
+- `src/lib/ai/providers.ts` - Chat provider initialization
+- `src/lib/ai/stt.ts` - STT provider initialization
+- `src/lib/ai/mock.ts` - Mock implementations
+
+**Key Functions:**
+- `completeJson<T>(options, schema, mockOptions)` - Structured JSON output
+- `complete(options, mockOptions)` - Text completion
+- `transcribe(audioBlob, options)` - Audio transcription
+
+**Migration from Legacy:**
+The old `src/lib/openai.ts` module is deprecated. All core modules now use the new AI layer.
+
+---
+
 # 3. Architecture Diagram (Textual)
-[Vendedor Voz] → [Web Audio] → [AudioGateway → STT] → [ConversationOrchestrator + PersonaEngine] → [OpenAI Chat Models]
+[Vendedor Voz] → [Web Audio] → [AudioGateway → STT] → [ConversationOrchestrator + PersonaEngine] → [AI Provider Layer] → [OpenAI/Anthropic]
 ↓
 [Client Text Reply]
 ↓
 [Frontend Chat Window + ClientCard]
 
 After end:
-[AnalysisEngine] → [OpenAI Chat] → [Score + Insights]
+[AnalysisEngine] → [AI Provider Layer] → [OpenAI/Anthropic] → [Score + Insights]
 ↓
 [DB]
 ↓
@@ -61,27 +95,29 @@ After end:
 ## 4.1 PersonaEngine
 - Input: ScenarioConfig
 - Output: Persona JSON
-- Uses OpenAI chat
+- Uses AI Provider Layer for chat completions
 - Stores persona_snapshot in DB
 
 ## 4.2 ConversationOrchestrator
 - Input: sellerText + sessionId
 - Loads persona + history
 - Builds prompt for realistic client simulation
+- Uses AI Provider Layer for chat completions
 - Output: clientText + meta
 - Stores conversation_turn entries
-- Allows “client ending call”
+- Allows "client ending call"
 
 ## 4.3 AnalysisEngine
 - Input: full conversation + persona
 - Output: Analysis JSON (score, checklist, moments)
+- Uses AI Provider Layer for structured JSON generation
 - Must produce well-structured JSON
 - Writes to analysis table
 
 ## 4.4 AudioGateway
 - Transcribe microphone audio
 - Returns text (Spanish)
-- Uses Whisper/OpenAI STT
+- Uses AI Provider Layer for STT (Whisper/AssemblyAI based on provider)
 
 ## 4.5 SessionService
 - Creates session

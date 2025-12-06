@@ -11,7 +11,7 @@ import {
 	type ScenarioConfig,
 	simulationSessions,
 } from "@/db/schema/simulation";
-import { createChatCompletion } from "./openai";
+import { completeJson } from "./ai";
 
 /**
  * Schema for key moments in the analysis.
@@ -318,31 +318,21 @@ export async function analyzeSession(
 	const systemPrompt = buildAnalysisSystemPrompt();
 	const userPrompt = buildAnalysisUserPrompt(persona, scenario, turns);
 
-	// Call OpenAI
-	const { completion, isMock } = await createChatCompletion(
+	// Call AI provider
+	const { object: parsed, isMock } = await completeJson(
 		{
 			messages: [
 				{ content: systemPrompt, role: "system" },
 				{ content: userPrompt, role: "user" },
 			],
-			model: "gpt-4o-mini",
-			response_format: { type: "json_object" },
 			temperature: 0.7,
 		},
+		analysisOutputSchema,
 		{
 			mockContent: () =>
 				JSON.stringify(buildMockAnalysisOutput(persona, scenario, turns)),
 		},
 	);
-
-	const content = completion.choices[0]?.message?.content;
-
-	if (!content) {
-		throw new Error("No se recibió respuesta del modelo de OpenAI");
-	}
-
-	// Parse and validate response
-	const parsed = analysisOutputSchema.parse(JSON.parse(content));
 
 	// Save analysis to database
 	const analysisId = await saveAnalysis(sessionId, parsed);
