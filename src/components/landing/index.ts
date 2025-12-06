@@ -1,0 +1,10 @@
+export { Benefits } from "./benefits";
+export { CtaFinal } from "./cta-final";
+export { DemoPreview } from "./demo-preview";
+export { Faq } from "./faq";
+export { FeaturesGrid } from "./features-grid";
+export { Footer } from "./footer";
+export { Hero } from "./hero";
+export { HowItWorks } from "./how-it-works";
+export { Realism } from "./realism";
+export { SocialProof } from "./social-proof";

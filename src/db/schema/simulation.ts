@@ -1,26 +1,19 @@
 import { sql } from "drizzle-orm";
-import {
-	integer,
-	jsonb,
-	pgEnum,
-	text,
-	timestamp,
-	uuid,
-} from "drizzle-orm/pg-core";
+import { integer, jsonb, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth.ts";
 import { schema } from "./schema.ts";
 
-export const contactTypeEnum = pgEnum("contact_type", [
+export const contactTypeEnum = schema.enum("contact_type", [
 	"cold_call",
 	"follow_up",
 	"inbound_callback",
 ]);
-export const sessionStatusEnum = pgEnum("simulation_status", [
+export const sessionStatusEnum = schema.enum("simulation_status", [
 	"pending_persona",
 	"active",
 	"completed",
 ]);
-export const turnRoleEnum = pgEnum("turn_role", ["seller", "client"]);
+export const turnRoleEnum = schema.enum("turn_role", ["seller", "client"]);
 
 export type ScenarioConfig = {
 	productName: string;

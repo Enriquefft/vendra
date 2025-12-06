@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run build:*)",
+      "Bash(bun run lint:*)",
+      "Bash(bun run type:*)",
+      "Bash(bun test:*)",
+      "Bash(biome check:*)",
+      "Bash(bun run:*)",
+      "Bash(timeout 180 bun run db:push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

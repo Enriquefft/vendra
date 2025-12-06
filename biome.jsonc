@@ -73,6 +73,17 @@
 					}
 				}
 			}
+		},
+		{
+			// allow static IDs in landing page for anchor navigation
+			"includes": ["**/src/app/page.tsx"],
+			"linter": {
+				"rules": {
+					"nursery": {
+						"useUniqueElementIds": "off"
+					}
+				}
+			}
 		}
 	],
 	"vcs": {
