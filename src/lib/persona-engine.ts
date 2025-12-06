@@ -36,10 +36,20 @@ export async function generatePersona(
 	config: ScenarioConfig,
 ): Promise<{ persona: PersonaProfile; usedMock: boolean }> {
 	const systemPrompt =
-		"Eres el PersonaEngine de VENDRA. Genera un cliente peruano realista para una simulación de venta. " +
-		"Debes mantener naturalidad, microcontradicciones leves y motivaciones humanas. Responde en JSON válido.";
+		"Genera un cliente peruano realista para una simulación de venta. " +
+		"Crea un personaje con personalidad auténtica, microcontradicciones sutiles y motivaciones humanas complejas. Responde en JSON válido.";
 
-	const userPrompt = `Configura un cliente simulado según este escenario. Devuelve un objeto JSON con las claves: 
+	// Instrucciones específicas por tipo de contacto
+	const contactTypeInstructions = {
+		cold_call:
+			"- Este cliente NO conoce al vendedor ni el producto específico. Genera un perfil de alguien con necesidades genéricas que el vendedor deberá descubrir.\n- NO menciones el producto específico en motivaciones/dolores, usa necesidades generales.",
+		follow_up:
+			"- Este cliente ya tuvo un contacto previo con el vendedor. Debe tener cierta familiaridad o memoria del producto.\n- Puede incluir el producto en su contexto de forma natural.",
+		inbound_callback:
+			"- Este cliente mostró interés activo y solicitó la llamada. Debe tener motivaciones claras y preguntas específicas.\n- Genera alguien proactivo con necesidades bien definidas.",
+	};
+
+	const userPrompt = `Crea un cliente simulado según este escenario. Devuelve un objeto JSON con las claves:
 {
   "name": string,
   "age": number,
@@ -56,10 +66,17 @@ export async function generatePersona(
 }
 
 Escenario de venta: ${JSON.stringify(config, null, 2)}
-- Ubicación y contexto deben sentirse peruanos/latam.
-- Alinea motivaciones y dolores con el producto y el objetivo de la llamada.
-- Personalidad psicológica debe ser coherente con la intensidad del cliente.
-- Usa español neutro. No incluyas texto adicional fuera del JSON.`;
+
+IMPORTANTE - Tipo de contacto: ${config.contactType}
+${contactTypeInstructions[config.contactType]}
+
+- Ubicación y contexto deben sentirse peruanos/latam
+- La historia breve (briefStory) debe ser un párrafo narrativo natural, no una lista
+- Personalidad debe tener pequeñas contradicciones (ej: "analítico pero a veces impulsivo")
+- Alinea motivaciones y dolores con el perfil objetivo
+- Personalidad psicológica debe ser coherente con la intensidad del cliente (${config.simulationPreferences.clientIntensity})
+- Usa español neutro latinoamericano
+- No incluyas texto adicional fuera del JSON.`;
 	const { object, isMock } = await completeJson(
 		{
 			messages: [

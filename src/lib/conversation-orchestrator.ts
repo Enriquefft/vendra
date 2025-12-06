@@ -24,6 +24,16 @@ export const clientResponseSchema = z.object({
 export type ClientResponse = z.infer<typeof clientResponseSchema>;
 
 /**
+ * Schema for generated previous context (follow_up and inbound_callback).
+ */
+const previousContextSchema = z.object({
+	clientMessage: z.string().min(1),
+	sellerMessage: z.string().min(1),
+});
+
+type PreviousContext = z.infer<typeof previousContextSchema>;
+
+/**
  * Schema for conversation history turns.
  */
 export type ConversationTurn = {
@@ -50,6 +60,22 @@ export type OrchestratorOutput = {
 	usedMock: boolean;
 };
 
+/**
+ * Gets the initial interest level based on contact type.
+ */
+function getInitialInterestLevel(contactType: string): number {
+	switch (contactType) {
+		case "cold_call":
+			return 3; // Low, skeptical
+		case "follow_up":
+			return 5; // Medium, already had contact
+		case "inbound_callback":
+			return 7; // High, client requested call
+		default:
+			return 5;
+	}
+}
+
 function buildMockClientReply(
 	sellerText: string,
 	persona: PersonaProfile,
@@ -57,16 +83,24 @@ function buildMockClientReply(
 	history: ConversationTurn[],
 ): ClientResponse {
 	const trimmedSeller = sellerText.trim();
+	const baseInterest = getInitialInterestLevel(scenario.contactType);
 	const turnInterest = Math.max(
-		3,
-		Math.min(9, 6 + Math.floor(history.length / 2)),
+		1,
+		Math.min(10, baseInterest + Math.floor(history.length / 2)),
 	);
+
+	// For cold calls, don't reveal product knowledge in mock
+	const shouldKnowProduct = scenario.contactType !== "cold_call";
 
 	return {
 		clientText:
 			trimmedSeller.length > 0
-				? `${persona.name}: entiendo tu oferta sobre ${scenario.productName}. ${trimmedSeller.slice(0, 140)}`
-				: `${persona.name}: ¿podrías contarme más sobre ${scenario.productName}?`,
+				? shouldKnowProduct
+					? `${persona.name}: entiendo tu oferta sobre ${scenario.productName}. ${trimmedSeller.slice(0, 140)}`
+					: `${persona.name}: ${trimmedSeller.slice(0, 140)}`
+				: shouldKnowProduct
+					? `${persona.name}: ¿podrías contarme más sobre ${scenario.productName}?`
+					: `${persona.name}: ¿de qué se trata esto?`,
 		interest: turnInterest,
 		interruption: false,
 		wantsToEnd: false,
@@ -93,6 +127,83 @@ async function loadScenarioConfig(
 		where: eq(simulationSessions.id, sessionId),
 	});
 	return session?.scenarioConfig ?? null;
+}
+
+/**
+ * Generates simulated previous context for follow_up and inbound_callback scenarios.
+ */
+async function generatePreviousContext(
+	persona: PersonaProfile,
+	scenario: ScenarioConfig,
+): Promise<PreviousContext | null> {
+	// Only generate for non-cold-call scenarios
+	if (scenario.contactType === "cold_call") {
+		return null;
+	}
+
+	const contextPrompt =
+		scenario.contactType === "follow_up"
+			? `Genera UN intercambio breve (1 turno vendedor + 1 turno cliente) de una conversación previa entre un vendedor y ${persona.name} sobre ${scenario.productName}.
+
+Contexto: Fue un primer contacto donde el vendedor presentó el producto brevemente y ${persona.name} mostró interés moderado pero no tomó una decisión. Acordaron hablar más adelante.
+
+El vendedor debe:
+- Presentarse e introducir ${scenario.productName} brevemente (2-3 oraciones)
+- Preguntar si es un buen momento
+
+${persona.name} debe:
+- Responder con interés moderado
+- Mencionar que no tiene tiempo en ese momento o necesita pensarlo
+- Acordar hablar más adelante
+
+Responde en JSON: {"sellerMessage": "...", "clientMessage": "..."}`
+			: `Genera UN intercambio breve (1 turno vendedor + 1 turno cliente) donde ${persona.name} inició contacto preguntando sobre ${scenario.productName}.
+
+Contexto: ${persona.name} se comunicó primero (por WhatsApp, formulario web, etc.) mostrando interés. El vendedor respondió brevemente y acordaron esta llamada para hablar con más detalle.
+
+${persona.name} debe:
+- Expresar interés inicial en ${scenario.productName}
+- Hacer 1-2 preguntas básicas
+
+El vendedor debe:
+- Responder brevemente
+- Proponer hablar con más detalle en esta llamada
+
+Responde en JSON: {"sellerMessage": "...", "clientMessage": "..."}`;
+
+	const systemPrompt =
+		"Genera diálogos realistas de ventas en español latino. Usa lenguaje natural y conversacional.";
+
+	try {
+		const { object } = await completeJson(
+			{
+				messages: [
+					{ content: systemPrompt, role: "system" },
+					{ content: contextPrompt, role: "user" },
+				],
+				temperature: 0.8,
+			},
+			previousContextSchema,
+			{
+				mockContent: () =>
+					JSON.stringify({
+						clientMessage:
+							scenario.contactType === "follow_up"
+								? `Hola, sí me acuerdo de la llamada anterior sobre ${scenario.productName}. Me interesa pero ese día no tenía tiempo. Ahora sí podemos hablar.`
+								: `Hola, yo pregunté por ${scenario.productName}. ¿Me puedes dar más detalles?`,
+						sellerMessage:
+							scenario.contactType === "follow_up"
+								? `Hola ${persona.name}, te llamo de seguimiento sobre ${scenario.productName} que conversamos. ¿Tienes unos minutos ahora?`
+								: `Hola ${persona.name}, claro que sí. Vi tu consulta sobre ${scenario.productName}. Con gusto te cuento más a detalle en esta llamada.`,
+					}),
+			},
+		);
+
+		return object;
+	} catch (error) {
+		console.error("Error generating previous context:", error);
+		return null;
+	}
 }
 
 /**
@@ -130,6 +241,42 @@ async function getNextTurnIndex(sessionId: string): Promise<number> {
 }
 
 /**
+ * Determines the product knowledge level for cold calls based on persona traits.
+ */
+function determineColdCallKnowledge(persona: PersonaProfile): string {
+	const traits = persona.personalityTraits.map((t) => t.toLowerCase());
+
+	// Variante 3: Escéptico/experimentado
+	if (
+		traits.some(
+			(t) =>
+				t.includes("escéptico") ||
+				t.includes("desconfiado") ||
+				t.includes("analítico") ||
+				t.includes("cauteloso"),
+		)
+	) {
+		return "Conoces la categoría general y tienes experiencia con productos similares. Muestra escepticismo o menciona que 'ya tienes algo parecido' o 'ya me han llamado de esto antes'.";
+	}
+
+	// Variante 1: Desconocimiento total
+	if (
+		traits.some(
+			(t) =>
+				t.includes("curioso") ||
+				t.includes("abierto") ||
+				t.includes("receptivo") ||
+				t.includes("entusiasta"),
+		)
+	) {
+		return "NO CONOCES este producto ni al vendedor. Cuando te lo mencionen, pregunta con curiosidad de qué se trata.";
+	}
+
+	// Variante 2: Conocimiento básico (default)
+	return "Puedes conocer la categoría general (ej: si venden seguros, sabes qué es un seguro), pero no conoces este producto específico ni la empresa que llama.";
+}
+
+/**
  * Builds the system prompt for the client simulation.
  */
 function buildSystemPrompt(
@@ -147,42 +294,67 @@ function buildSystemPrompt(
 
 	const realismDescriptions = {
 		exigente:
-			"Responde de manera muy realista con pausas, dudas y cambios de tema como un cliente real.",
+			"Habla de forma muy natural: incluye pausas ('este...', 'eh...'), cambia de tema, repite ideas si algo no te convence. Como un cliente real latinoamericano.",
 		humano:
-			"Incluye pequeñas imperfecciones naturales en tu forma de hablar, como repeticiones leves o pausas.",
-		natural: "Responde de forma natural y coherente.",
+			"Usa lenguaje conversacional con algunas expresiones regionales ocasionales ('ya', 'o sea', 'mira'). Incluye pequeñas dudas o preguntas tangenciales.",
+		natural:
+			"Responde de forma conversacional y coherente, con español profesional latinoamericano.",
 	};
 
-	return `Eres ${persona.name}, un cliente potencial en una llamada de ventas.
+	// Contexto diferenciado según tipo de contacto
+	let productKnowledge = "";
+	let callContext = "";
 
-## Tu perfil:
-- Edad: ${persona.age} años
-- Ubicación: ${persona.location}
-- Nivel socioeconómico: ${persona.socioeconomicLevel}
-- Ocupación: ${persona.occupation}
-- Nivel educativo: ${persona.educationLevel}
-- Rasgos de personalidad: ${persona.personalityTraits.join(", ")}
-- Motivaciones: ${persona.motivations.join(", ")}
-- Dolores/problemas: ${persona.pains.join(", ")}
-- Actitud en la llamada: ${persona.callAttitude}
-- Historia breve: ${persona.briefStory}
+	switch (scenario.contactType) {
+		case "cold_call":
+			callContext =
+				"Recibes una llamada inesperada de un vendedor que no conoces.";
+			productKnowledge = determineColdCallKnowledge(persona);
+			break;
 
-## El vendedor te ofrece:
-- Producto: ${scenario.productName}
-- Descripción: ${scenario.description}
-${scenario.priceDetails ? `- Precio/condiciones: ${scenario.priceDetails}` : ""}
-- Objetivo del vendedor: ${scenario.callObjective}
+		case "follow_up":
+			callContext =
+				"Esta es una segunda conversación con un vendedor que ya te contactó antes.";
+			productKnowledge = `Ya sabes que el vendedor ofrece ${scenario.productName}. Tuviste una conversación previa básica sobre esto.`;
+			break;
 
-## Tu comportamiento:
+		case "inbound_callback":
+			callContext =
+				"Tú solicitaste esta llamada o devolviste un contacto previo porque tienes interés.";
+			productKnowledge = `Tienes conocimiento básico sobre ${scenario.productName} y mostraste interés inicial.`;
+			break;
+	}
+
+	return `Eres ${persona.name}, un cliente ${callContext}
+
+## Tu historia personal:
+${persona.briefStory}
+
+Tienes ${persona.age} años, vives en ${persona.location}, trabajas como ${persona.occupation}.
+Tu personalidad: ${persona.personalityTraits.join(", ")}. ${persona.callAttitude}
+
+## Tus necesidades actuales:
+Buscas soluciones para: ${persona.pains.join(", ")}.
+Te motiva: ${persona.motivations.join(", ")}.
+
+## Contexto de esta llamada:
+${productKnowledge}
+
+## Cómo comportarte:
 ${intensityDescriptions[scenario.simulationPreferences.clientIntensity]}
 ${realismDescriptions[scenario.simulationPreferences.realism]}
 
-## Reglas importantes:
-1. Responde SOLO como el cliente, en primera persona.
-2. No rompas el personaje ni expliques lo que haces.
-3. Sé coherente con tu perfil y personalidad.
-4. Si el vendedor no te convence o la conversación se estanca, puedes mostrar desinterés.
-${scenario.simulationPreferences.allowHangups ? "5. Si te sientes muy frustrado o desinteresado, puedes decidir terminar la llamada." : "5. Aunque pierdas interés, mantén la cortesía básica."}
+Tu interés puede aumentar o disminuir naturalmente según cómo te convenza el vendedor. Si responde bien a tus objeciones, tu interés sube. Si evade preguntas o presiona demasiado, baja.
+
+## INSTRUCCIONES DE LENGUAJE NATURAL:
+1. PROHIBIDO usar frases corporativas/de AI como: "Entiendo tu preocupación", "Es una excelente pregunta", "Me parece muy bien"
+2. USA fragmentos naturales de conversación: "O sea...", "Este...", "Ya...", "A ver..."
+3. Muestra emociones AUTÉNTICAS: impaciencia real, curiosidad genuina, dudas sin filtro
+4. Puedes interrumpir si el vendedor habla demasiado o es repetitivo
+5. No seas excesivamente educado - sé realista según tu personalidad y NSE
+
+Responde SOLO como ${persona.name}, en primera persona. No rompas el personaje ni expliques lo que haces. Sé coherente con tu perfil y personalidad.
+${scenario.simulationPreferences.allowHangups ? "Si te frustras o pierdes interés completamente, puedes terminar la llamada." : "Aunque pierdas interés, mantén la cortesía básica."}
 
 Responde en JSON con el siguiente formato exacto:
 {
@@ -206,14 +378,22 @@ function buildConversationMessages(
 		content: string;
 	}> = [{ content: systemPrompt, role: "system" }];
 
-	// Add conversation history
+	// Add conversation history as natural dialogue, not JSON
 	for (const turn of history) {
 		if (turn.role === "seller") {
 			messages.push({ content: turn.content, role: "user" });
 		} else {
-			// For client turns, we wrap in JSON format to maintain consistency
+			// Extract only the client text if it's JSON, otherwise use as-is
+			let clientText = turn.content;
+			try {
+				const parsed = JSON.parse(turn.content);
+				clientText = parsed.clientText || turn.content;
+			} catch {
+				// If not valid JSON, use content as-is
+				clientText = turn.content;
+			}
 			messages.push({
-				content: turn.content,
+				content: clientText,
 				role: "assistant",
 			});
 		}
@@ -280,7 +460,33 @@ export async function orchestrateConversation(
 	}
 
 	// Load conversation history
-	const history = await loadConversationHistory(sessionId);
+	let history = await loadConversationHistory(sessionId);
+
+	// Generate and insert previous context for follow_up/inbound_callback on first turn
+	if (
+		history.length === 0 &&
+		(scenario.contactType === "follow_up" ||
+			scenario.contactType === "inbound_callback")
+	) {
+		const previousContext = await generatePreviousContext(persona, scenario);
+		if (previousContext) {
+			// Insert simulated previous conversation
+			await insertTurn(
+				sessionId,
+				"seller",
+				previousContext.sellerMessage,
+				-2, // Negative index to indicate simulated previous context
+			);
+			await insertTurn(
+				sessionId,
+				"client",
+				previousContext.clientMessage,
+				-1, // Negative index to indicate simulated previous context
+			);
+			// Reload history with the new context
+			history = await loadConversationHistory(sessionId);
+		}
+	}
 
 	// Get next turn index
 	const nextIndex = await getNextTurnIndex(sessionId);

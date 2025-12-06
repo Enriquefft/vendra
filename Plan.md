@@ -113,9 +113,17 @@ It references:
 
 ---
 
-### Step 10 — Prompt Tuning & Realism ⬚
-- ⬚ Reinforce natural behavior
-- ⬚ Reduce robotic patterns
+### Step 10 — Prompt Tuning & Realism ✅
+- ✅ Reinforce natural behavior
+- ✅ Reduce robotic patterns
+- ✅ Fix BUG-001: Prevent product knowledge leak in cold calls
+- ✅ Differentiate behavior by contact type (cold_call/follow_up/inbound_callback)
+- ✅ Extract client text from JSON in conversation history
+- ✅ Add anti-robotic language instructions
+- ✅ Implement emotional arc and dynamic interest
+- ✅ Generate previous context for follow_up/inbound_callback
+- ✅ Remove system identity from prompts
+- ✅ Add natural speech patterns
 
 ---
 

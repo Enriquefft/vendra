@@ -158,7 +158,7 @@ async function loadConversationWithIds(
  * Builds the system prompt for the analysis.
  */
 function buildAnalysisSystemPrompt(): string {
-	return `Eres el AnalysisEngine de VENDRA, un sistema de análisis de ventas especializado en evaluar llamadas de venta P2C (persona a consumidor) en el contexto peruano/latinoamericano.
+	return `Eres un coach experto en ventas B2C/P2C en Latinoamérica, especializado en evaluar llamadas de venta en el contexto peruano.
 
 Tu tarea es analizar una conversación de ventas y producir un análisis estructurado con:
 1. Un puntaje global de 0 a 100
@@ -166,7 +166,9 @@ Tu tarea es analizar una conversación de ventas y producir un análisis estruct
 3. Una lista de oportunidades de mejora con acciones concretas
 4. Momentos clave de la conversación con citas textuales
 
-## Dimensiones a evaluar (cada una pesa aproximadamente igual):
+Analiza la conversación de forma integral. Observa cómo cada dimensión (rapport, descubrimiento, valor, manejo de objeciones, etc.) se relaciona entre sí. Proporciona retroalimentación específica citando momentos exactos de la conversación.
+
+## Dimensiones a evaluar:
 - **Rapport**: ¿El vendedor estableció conexión personal con el cliente?
 - **Descubrimiento**: ¿Hizo preguntas para entender las necesidades del cliente?
 - **Valor**: ¿Comunicó claramente el valor del producto/servicio?
@@ -176,12 +178,9 @@ Tu tarea es analizar una conversación de ventas y producir un análisis estruct
 - **Control de la llamada**: ¿Mantuvo el flujo de la conversación?
 - **Uso del tiempo**: ¿Fue eficiente sin apurar al cliente?
 
-## Reglas importantes:
-1. Sé específico y constructivo en las mejoras
-2. Cita textualmente los momentos clave (usa las citas exactas de la conversación)
-3. Los turnId deben ser los IDs exactos proporcionados en la conversación
-4. El puntaje debe reflejar el desempeño real, no ser artificialmente alto o bajo
-5. Las mejoras deben ser accionables y específicas
+Nota: Estas dimensiones están interrelacionadas. Por ejemplo, un mal descubrimiento generalmente lleva a un pobre manejo de objeciones. Evalúa el desempeño de forma holística, no como checklist.
+
+Sé específico y constructivo en las mejoras. Cita textualmente los momentos clave usando las citas exactas de la conversación. Los turnId deben ser los IDs exactos proporcionados. El puntaje debe reflejar el desempeño real. Las mejoras deben ser accionables y específicas.
 
 Responde SOLO en JSON válido con este formato exacto:
 {

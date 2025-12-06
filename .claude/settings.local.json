@@ -17,7 +17,8 @@
 			"WebSearch",
 			"WebFetch(domain:ai-sdk.dev)",
 			"Bash(bun add:*)",
-			"Bash(bunx ai-sdk:*)"
+			"Bash(bunx ai-sdk:*)",
+			"Bash(./node_modules/.bin/biome check:*)"
 		],
 		"ask": [],
 		"deny": []

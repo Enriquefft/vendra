@@ -4,7 +4,8 @@ import { defineConfig } from "@playwright/test";
 const PORT = process.env["PORT"] ? Number(process.env["PORT"]) : 3000;
 
 export default defineConfig({
-	testDir: "tests/e2e",
+	testDir: "e2e",
+	testMatch: "**/*.pw.ts",
 	use: {
 		baseURL: `http://localhost:${PORT}`,
 		headless: true,
