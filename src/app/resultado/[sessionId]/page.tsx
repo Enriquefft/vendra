@@ -92,7 +92,10 @@ export default async function ResultsPage({ params }: PageProps) {
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
+								role="img"
+								aria-label="Aviso de privacidad"
 							>
+								<title>Aviso de privacidad</title>
 								<path
 									strokeLinecap="round"
 									strokeLinejoin="round"

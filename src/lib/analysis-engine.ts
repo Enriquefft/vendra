@@ -7,7 +7,9 @@ import {
 	type ImprovementItem,
 	type KeyMoment,
 	type PersonaProfile,
+	type PsychologicalState,
 	personaSnapshots,
+	psychologicalStates,
 	type ScenarioConfig,
 	simulationSessions,
 } from "@/db/schema/simulation";
@@ -155,10 +157,22 @@ async function loadConversationWithIds(
 }
 
 /**
+ * Loads the psychological state for a given session.
+ */
+async function loadPsychologicalState(
+	sessionId: string,
+): Promise<PsychologicalState | null> {
+	const stateRecord = await db.query.psychologicalStates.findFirst({
+		where: eq(psychologicalStates.sessionId, sessionId),
+	});
+	return stateRecord?.state ?? null;
+}
+
+/**
  * Builds the system prompt for the analysis.
  */
 function buildAnalysisSystemPrompt(): string {
-	return `Eres un coach experto en ventas B2C/P2C en Latinoamérica, especializado en evaluar llamadas de venta en el contexto peruano.
+	return `Eres un coach experto en ventas B2C/P2C en Latinoamérica, especializado en evaluar llamadas de venta en el contexto peruano con enfoque en psicología del consumidor.
 
 Tu tarea es analizar una conversación de ventas y producir un análisis estructurado con:
 1. Un puntaje global de 0 a 100
@@ -178,9 +192,18 @@ Analiza la conversación de forma integral. Observa cómo cada dimensión (rappo
 - **Control de la llamada**: ¿Mantuvo el flujo de la conversación?
 - **Uso del tiempo**: ¿Fue eficiente sin apurar al cliente?
 
+## **NUEVO: Evaluación Psicológica**
+Si se proporciona información de trayectoria emocional del cliente, evalúa también:
+- **Construcción de confianza**: ¿El vendedor logró incrementar la confianza del cliente a lo largo de la conversación?
+- **Gestión emocional**: ¿Detectó y respondió apropiadamente a los cambios emocionales del cliente (frustración, entusiasmo, confusión)?
+- **Adaptación al estilo de decisión**: ¿Ajustó su enfoque a la velocidad y estilo de decisión del cliente?
+- **Progresión en etapas de compra**: ¿Avanzó efectivamente al cliente a través de las etapas de decisión?
+
 Nota: Estas dimensiones están interrelacionadas. Por ejemplo, un mal descubrimiento generalmente lleva a un pobre manejo de objeciones. Evalúa el desempeño de forma holística, no como checklist.
 
 Sé específico y constructivo en las mejoras. Cita textualmente los momentos clave usando las citas exactas de la conversación. Los turnId deben ser los IDs exactos proporcionados. El puntaje debe reflejar el desempeño real. Las mejoras deben ser accionables y específicas.
+
+**Si hay datos psicológicos**: Menciona explícitamente cómo el vendedor pudo/no pudo adaptarse al perfil psicológico del cliente.
 
 Responde SOLO en JSON válido con este formato exacto:
 {
@@ -198,12 +221,13 @@ Responde SOLO en JSON válido con este formato exacto:
 }
 
 /**
- * Builds the user prompt with conversation context.
+ * Builds the user prompt with conversation context and psychological trajectory.
  */
 function buildAnalysisUserPrompt(
 	persona: PersonaProfile,
 	scenario: ScenarioConfig,
 	turns: StoredConversationTurn[],
+	psychState: PsychologicalState | null,
 ): string {
 	const conversationText = turns
 		.map((turn) => {
@@ -211,6 +235,62 @@ function buildAnalysisUserPrompt(
 			return `[Turno ${turn.turnIndex}] [ID: ${turn.id}] ${speaker}: "${turn.content}"`;
 		})
 		.join("\n\n");
+
+	// Build psychological trajectory if available
+	let psychologicalContext = "";
+	if (psychState && persona.psychology) {
+		// Analyze emotional trajectory
+		const initialTrust = psychState.emotionHistory[0]?.emotions.trust || 40;
+		const finalTrust = psychState.currentEmotions.trust;
+		const trustChange = finalTrust - initialTrust;
+
+		const initialFrustration =
+			psychState.emotionHistory[0]?.emotions.frustration || 0;
+		const finalFrustration = psychState.currentEmotions.frustration;
+
+		const initialConfusion =
+			psychState.emotionHistory[0]?.emotions.confusion || 20;
+		const finalConfusion = psychState.currentEmotions.confusion;
+
+		psychologicalContext = `
+
+## **TRAYECTORIA PSICOLÓGICA DEL CLIENTE**
+
+**Perfil Psicológico:**
+- Big Five: Apertura ${persona.psychology.bigFive.openness}/100, Responsabilidad ${persona.psychology.bigFive.conscientiousness}/100, Extraversión ${persona.psychology.bigFive.extraversion}/100, Amabilidad ${persona.psychology.bigFive.agreeableness}/100, Neuroticismo ${persona.psychology.bigFive.neuroticism}/100
+- Tolerancia al riesgo: ${persona.psychology.salesProfile.riskTolerance}/100
+- Velocidad de decisión: ${persona.psychology.salesProfile.decisionSpeed}/100 (${persona.psychology.salesProfile.decisionSpeed > 70 ? "rápido" : persona.psychology.salesProfile.decisionSpeed < 30 ? "muy deliberado" : "moderado"})
+- Sensibilidad al precio: ${persona.psychology.salesProfile.priceSensitivity}/100
+- Umbral de confianza: ${persona.psychology.salesProfile.trustThreshold}/100 (${persona.psychology.salesProfile.trustThreshold < 40 ? "difícil de ganar confianza" : "confía relativamente fácil"})
+
+**Evolución Emocional:**
+- Confianza: ${initialTrust} → ${finalTrust} (${trustChange > 0 ? `+${trustChange}` : trustChange} puntos) ${trustChange > 10 ? "✓ Incrementó confianza" : trustChange < -10 ? "✗ Perdió confianza" : "≈ Sin cambio significativo"}
+- Frustración: ${initialFrustration} → ${finalFrustration} ${finalFrustration > 60 ? "✗ Cliente muy frustrado" : finalFrustration < 30 ? "✓ Cliente tranquilo" : ""}
+- Confusión: ${initialConfusion} → ${finalConfusion} ${finalConfusion > 60 ? "✗ Cliente confundido" : finalConfusion < initialConfusion ? "✓ Claridad mejoró" : ""}
+
+**Progresión de Decisión:**
+- Etapa inicial: ${psychState.emotionHistory[0]?.emotions ? "unaware/problem_aware" : "N/A"}
+- Etapa final: ${psychState.decisionProgression.stage}
+- Confianza en decisión: ${psychState.decisionProgression.confidence}/100
+${psychState.decisionProgression.blockers.length > 0 ? `- Bloqueadores sin resolver: ${psychState.decisionProgression.blockers.join(", ")}` : ""}
+
+**Relación Construida:**
+- Etapa: ${psychState.relationshipState.stage} (${psychState.relationshipState.positiveInteractions} interacciones positivas, ${psychState.relationshipState.negativeInteractions} negativas)
+
+**Memoria de Conversación:**
+${psychState.conversationMemory.objectionsRaised.length > 0 ? `- Objeciones levantadas: ${psychState.conversationMemory.objectionsRaised.filter((o) => !o.resolved).length} sin resolver de ${psychState.conversationMemory.objectionsRaised.length} total` : "- Sin objeciones registradas"}
+${psychState.conversationMemory.questionsAsked.length > 0 ? `- Preguntas del cliente: ${psychState.conversationMemory.questionsAsked.filter((q) => !q.answered).length} sin responder de ${psychState.conversationMemory.questionsAsked.length} total` : ""}
+${psychState.conversationMemory.sellerPromises.length > 0 ? `- Promesas del vendedor: ${psychState.conversationMemory.sellerPromises.filter((p) => !p.fulfilled).length} sin cumplir de ${psychState.conversationMemory.sellerPromises.length} total` : ""}
+
+**INSTRUCCIONES DE ANÁLISIS PSICOLÓGICO:**
+Evalúa específicamente cómo el vendedor:
+1. Adaptó su enfoque al perfil psicológico del cliente (Big Five, estilo de decisión)
+2. Respondió a los cambios emocionales del cliente
+3. Construyó (o no) confianza progresivamente
+4. Manejó las objeciones y preguntas
+5. Avanzó al cliente a través de las etapas de decisión
+`;
+	}
 
 	return `## Contexto del escenario
 - Producto: ${scenario.productName}
@@ -230,6 +310,7 @@ ${scenario.priceDetails ? `- Precio/condiciones: ${scenario.priceDetails}` : ""}
 - Motivaciones: ${persona.motivations.join(", ")}
 - Dolores: ${persona.pains.join(", ")}
 - Actitud en la llamada: ${persona.callAttitude}
+${psychologicalContext}
 
 ## Conversación completa
 ${conversationText}
@@ -313,9 +394,17 @@ export async function analyzeSession(
 		throw new Error("No hay turnos de conversación para analizar");
 	}
 
-	// Build prompts
+	// Load psychological state (may be null for old sessions)
+	const psychState = await loadPsychologicalState(sessionId);
+
+	// Build prompts with psychological trajectory
 	const systemPrompt = buildAnalysisSystemPrompt();
-	const userPrompt = buildAnalysisUserPrompt(persona, scenario, turns);
+	const userPrompt = buildAnalysisUserPrompt(
+		persona,
+		scenario,
+		turns,
+		psychState,
+	);
 
 	// Call AI provider
 	const { object: parsed, isMock } = await completeJson(

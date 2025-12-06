@@ -29,6 +29,7 @@ export const env = createEnv({
 		NEXT_PUBLIC_APP_URL: process.env["NEXT_PUBLIC_APP_URL"],
 		NEXT_PUBLIC_PROJECT_NAME: process.env["NEXT_PUBLIC_PROJECT_NAME"],
 		OPENAI_API_KEY: process.env["OPENAI_API_KEY"],
+		PSYCHOLOGY_PROMPT_MODE: process.env["PSYCHOLOGY_PROMPT_MODE"],
 	},
 	server: {
 		AI_CHAT_MODEL: z.string().optional(),
@@ -42,5 +43,11 @@ export const env = createEnv({
 		GOOGLE_CLIENT_ID: z.string(),
 		GOOGLE_CLIENT_SECRET: z.string(),
 		OPENAI_API_KEY: z.string().min(1).optional(),
+		PSYCHOLOGY_PROMPT_MODE: z
+			.enum(["full", "optimized"])
+			.default("full")
+			.describe(
+				"Psychology prompt mode: 'full' includes complete psychological context (max realism, higher tokens), 'optimized' summarizes state (balanced)",
+			),
 	},
 });

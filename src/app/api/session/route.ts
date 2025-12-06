@@ -2,8 +2,13 @@ import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { personaSnapshots, simulationSessions } from "@/db/schema/simulation";
+import {
+	personaSnapshots,
+	psychologicalStates,
+	simulationSessions,
+} from "@/db/schema/simulation";
 import { generatePersona } from "@/lib/persona-engine";
+import { initializeState } from "@/lib/psychology-engine";
 import { scenarioConfigSchema } from "@/lib/schemas/session";
 
 export async function POST(request: NextRequest) {
@@ -49,6 +54,13 @@ export async function POST(request: NextRequest) {
 		await db.insert(personaSnapshots).values({
 			persona: personaResult.persona,
 			sessionId: createdSession.id,
+		});
+
+		// Initialize psychological state for the session
+		const initialPsychState = initializeState(personaResult.persona);
+		await db.insert(psychologicalStates).values({
+			sessionId: createdSession.id,
+			state: initialPsychState,
 		});
 
 		await db

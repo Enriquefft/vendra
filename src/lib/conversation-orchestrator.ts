@@ -5,11 +5,27 @@ import {
 	type ConversationTurnMeta,
 	conversationTurns,
 	type PersonaProfile,
+	type PsychologicalState,
 	personaSnapshots,
+	psychologicalStates,
 	type ScenarioConfig,
 	simulationSessions,
 } from "@/db/schema/simulation";
+import { env } from "@/env";
 import { completeJson } from "./ai";
+import {
+	analyzeSellerTurn,
+	type BehaviorGuidance,
+	type BigFive,
+	type DecisionStage,
+	type EmotionalState,
+	generateBehaviorGuidance,
+	initializeState,
+	updateDecisionProgression,
+	updateEmotionalState,
+	updateMemory,
+	updateRelationshipStage,
+} from "./psychology-engine";
 
 /**
  * Schema for the client response from the AI.
@@ -127,6 +143,45 @@ async function loadScenarioConfig(
 		where: eq(simulationSessions.id, sessionId),
 	});
 	return session?.scenarioConfig ?? null;
+}
+
+/**
+ * Loads the psychological state for a given session.
+ * Returns null if not found (will be initialized on first turn).
+ */
+async function loadPsychologicalState(
+	sessionId: string,
+): Promise<PsychologicalState | null> {
+	const stateRecord = await db.query.psychologicalStates.findFirst({
+		where: eq(psychologicalStates.sessionId, sessionId),
+	});
+	return stateRecord?.state ?? null;
+}
+
+/**
+ * Saves or updates the psychological state for a session.
+ */
+async function savePsychologicalState(
+	sessionId: string,
+	state: PsychologicalState,
+): Promise<void> {
+	// Try to update existing state
+	const existing = await db.query.psychologicalStates.findFirst({
+		where: eq(psychologicalStates.sessionId, sessionId),
+	});
+
+	if (existing) {
+		await db
+			.update(psychologicalStates)
+			.set({ state, updatedAt: new Date() })
+			.where(eq(psychologicalStates.sessionId, sessionId));
+	} else {
+		// Insert new state
+		await db.insert(psychologicalStates).values({
+			sessionId,
+			state,
+		});
+	}
 }
 
 /**
@@ -277,11 +332,97 @@ function determineColdCallKnowledge(persona: PersonaProfile): string {
 }
 
 /**
- * Builds the system prompt for the client simulation.
+ * Builds psychological context for the AI prompt in "full" mode
+ */
+function buildFullPsychologicalContext(
+	emotions: EmotionalState,
+	psychState: PsychologicalState,
+	behaviorGuidance: BehaviorGuidance,
+): string {
+	return `
+## ESTADO PSICOLÓGICO ACTUAL
+
+**Estado Emocional:**
+- Valencia emocional: ${emotions.valence > 0 ? `+${emotions.valence}` : emotions.valence}/100 (${emotions.valence > 30 ? "positivo" : emotions.valence < -30 ? "negativo" : "neutral"})
+- Activación: ${emotions.arousal}/100 (${emotions.arousal > 70 ? "muy activado" : emotions.arousal > 40 ? "moderado" : "tranquilo"})
+- Confianza en vendedor: ${emotions.trust}/100
+- Compromiso/atención: ${emotions.engagement}/100
+- Frustración acumulada: ${emotions.frustration}/100
+- Entusiasmo por oferta: ${emotions.enthusiasm}/100
+- Confusión sobre producto: ${emotions.confusion}/100
+
+**Etapa de Decisión:**
+- Etapa actual: ${psychState.decisionProgression.stage}
+- Confianza en decisión: ${psychState.decisionProgression.confidence}/100
+${psychState.decisionProgression.blockers.length > 0 ? `- Bloqueadores: ${psychState.decisionProgression.blockers.join(", ")}` : ""}
+${psychState.decisionProgression.accelerators.length > 0 ? `- Aceleradores: ${psychState.decisionProgression.accelerators.join(", ")}` : ""}
+
+**Relación con Vendedor:**
+- Etapa: ${psychState.relationshipState.stage}
+- Interacciones positivas: ${psychState.relationshipState.positiveInteractions}
+- Interacciones negativas: ${psychState.relationshipState.negativeInteractions}
+
+**Guía de Comportamiento:**
+- Tono emocional: ${behaviorGuidance.emotionalTone}
+- Longitud de respuesta: ${behaviorGuidance.responseLength === "terse" ? "respuestas cortas" : behaviorGuidance.responseLength === "verbose" ? "respuestas detalladas" : "respuestas moderadas"}
+- Nivel de duda: ${behaviorGuidance.hesitationLevel}/10
+${behaviorGuidance.fillerWords.length > 0 ? `- Usa muletillas: ${behaviorGuidance.fillerWords.join(", ")}` : ""}
+${behaviorGuidance.shouldReference.length > 0 ? `- Referencia pendiente: ${behaviorGuidance.shouldReference.map((r) => `${r.type}: "${r.content.slice(0, 50)}..."`).join("; ")}` : ""}
+
+**INSTRUCCIONES DE REALISMO:**
+- Tu estado emocional influye en CÓMO respondes (tono, longitud, palabras)
+- Si tienes baja confianza (${emotions.trust}/100), sé más escéptico y cauteloso
+- Si tienes alta frustración (${emotions.frustration}/100), muestra impaciencia o molestia
+- Si tienes baja atención (${emotions.engagement}/100), da respuestas más cortas y distraídas
+- Si tienes alta confusión (${emotions.confusion}/100), pide aclaraciones
+- Tu relación con el vendedor es de "${psychState.relationshipState.stage}" - actúa acorde
+`;
+}
+
+/**
+ * Builds psychological context for the AI prompt in "optimized" mode
+ */
+function buildOptimizedPsychologicalContext(
+	emotions: EmotionalState,
+	psychState: PsychologicalState,
+	behaviorGuidance: BehaviorGuidance,
+): string {
+	// Summarize emotions into simple descriptor
+	let emotionalSummary = "neutral";
+	if (emotions.frustration > 60) {
+		emotionalSummary = "frustrado";
+	} else if (emotions.enthusiasm > 60 && emotions.trust > 60) {
+		emotionalSummary = "entusiasmado y confiado";
+	} else if (emotions.confusion > 60) {
+		emotionalSummary = "confundido";
+	} else if (emotions.engagement < 30) {
+		emotionalSummary = "desinteresado";
+	} else if (emotions.valence > 30) {
+		emotionalSummary = "positivo";
+	} else if (emotions.valence < -30) {
+		emotionalSummary = "negativo";
+	}
+
+	return `
+## ESTADO ACTUAL
+
+- Estado emocional: ${emotionalSummary} (confianza ${emotions.trust}/100, frustración ${emotions.frustration}/100)
+- Etapa de decisión: ${psychState.decisionProgression.stage} (confianza ${psychState.decisionProgression.confidence}/100)
+- Relación: ${psychState.relationshipState.stage}
+- Responde con tono: ${behaviorGuidance.emotionalTone}
+- Longitud: ${behaviorGuidance.responseLength === "terse" ? "corto" : behaviorGuidance.responseLength === "verbose" ? "detallado" : "moderado"}
+${behaviorGuidance.shouldReference.length > 0 ? `- Referencia: ${behaviorGuidance.shouldReference[0]?.type}` : ""}
+`;
+}
+
+/**
+ * Builds the system prompt for the client simulation with psychological context.
  */
 function buildSystemPrompt(
 	persona: PersonaProfile,
 	scenario: ScenarioConfig,
+	psychState?: PsychologicalState,
+	behaviorGuidance?: BehaviorGuidance,
 ): string {
 	const intensityDescriptions = {
 		dificil:
@@ -325,6 +466,22 @@ function buildSystemPrompt(
 			break;
 	}
 
+	// Add psychological context if available
+	const psychologicalContext =
+		psychState && behaviorGuidance
+			? env.PSYCHOLOGY_PROMPT_MODE === "full"
+				? buildFullPsychologicalContext(
+						psychState.currentEmotions,
+						psychState,
+						behaviorGuidance,
+					)
+				: buildOptimizedPsychologicalContext(
+						psychState.currentEmotions,
+						psychState,
+						behaviorGuidance,
+					)
+			: "";
+
 	return `Eres ${persona.name}, un cliente ${callContext}
 
 ## Tu historia personal:
@@ -339,6 +496,7 @@ Te motiva: ${persona.motivations.join(", ")}.
 
 ## Contexto de esta llamada:
 ${productKnowledge}
+${psychologicalContext}
 
 ## Cómo comportarte:
 ${intensityDescriptions[scenario.simulationPreferences.clientIntensity]}
@@ -462,6 +620,21 @@ export async function orchestrateConversation(
 	// Load conversation history
 	let history = await loadConversationHistory(sessionId);
 
+	// Load or initialize psychological state
+	let psychState = await loadPsychologicalState(sessionId);
+	if (!psychState) {
+		// Initialize on first turn
+		psychState = initializeState(persona);
+		// Set initial decision stage based on contact type
+		if (scenario.contactType === "cold_call") {
+			psychState.decisionProgression.stage = "unaware";
+		} else if (scenario.contactType === "follow_up") {
+			psychState.decisionProgression.stage = "product_aware";
+		} else if (scenario.contactType === "inbound_callback") {
+			psychState.decisionProgression.stage = "evaluating";
+		}
+	}
+
 	// Generate and insert previous context for follow_up/inbound_callback on first turn
 	if (
 		history.length === 0 &&
@@ -499,8 +672,83 @@ export async function orchestrateConversation(
 		nextIndex,
 	);
 
-	// Build prompts
-	const systemPrompt = buildSystemPrompt(persona, scenario);
+	// === PSYCHOLOGICAL PROCESSING ===
+
+	// Analyze seller turn for emotional triggers
+	const impacts = analyzeSellerTurn(sellerText, persona);
+
+	// Update emotional state
+	const bigFive: BigFive = persona.psychology?.bigFive || {
+		agreeableness: 50,
+		conscientiousness: 50,
+		extraversion: 50,
+		neuroticism: 50,
+		openness: 50,
+	};
+
+	const updatedEmotions = updateEmotionalState(
+		psychState.currentEmotions,
+		impacts,
+		bigFive,
+	);
+
+	// Track positive/negative interactions for relationship
+	let positiveInteractions = psychState.relationshipState.positiveInteractions;
+	let negativeInteractions = psychState.relationshipState.negativeInteractions;
+
+	const netEmotionalChange =
+		updatedEmotions.trust -
+		psychState.currentEmotions.trust +
+		(updatedEmotions.valence - psychState.currentEmotions.valence) -
+		(updatedEmotions.frustration - psychState.currentEmotions.frustration);
+
+	if (netEmotionalChange > 5) {
+		positiveInteractions++;
+	} else if (netEmotionalChange < -5) {
+		negativeInteractions++;
+	}
+
+	// Update relationship stage
+	const updatedRelationshipStage = updateRelationshipStage(
+		psychState.relationshipState.stage,
+		positiveInteractions,
+		negativeInteractions,
+		updatedEmotions.trust,
+	);
+
+	// Update decision progression
+	const conversationTurns = history.length + 1;
+	const updatedDecision = updateDecisionProgression(
+		psychState.decisionProgression.stage as DecisionStage,
+		updatedEmotions,
+		conversationTurns,
+	);
+
+	// Update psychological state
+	psychState.currentEmotions = updatedEmotions;
+	psychState.decisionProgression = updatedDecision;
+	psychState.relationshipState = {
+		negativeInteractions,
+		positiveInteractions,
+		stage: updatedRelationshipStage,
+	};
+
+	// Add to emotion history
+	psychState.emotionHistory.push({
+		emotions: { ...updatedEmotions },
+		turnIndex: nextIndex,
+	});
+
+	// Generate behavior guidance for AI
+	const behaviorGuidance = generateBehaviorGuidance(psychState, persona);
+
+	// Build prompts with psychological context
+	const systemPrompt = buildSystemPrompt(
+		persona,
+		scenario,
+		psychState,
+		behaviorGuidance,
+	);
 	const messages = buildConversationMessages(systemPrompt, history, sellerText);
 
 	// Call AI provider
@@ -518,9 +766,46 @@ export async function orchestrateConversation(
 		},
 	);
 
-	// Insert client turn with metadata
+	// Update memory based on this conversation turn
+	psychState.conversationMemory = updateMemory(
+		psychState.conversationMemory,
+		sellerText,
+		parsed.clientText,
+		nextIndex + 1,
+	);
+
+	// Insert client turn with enhanced metadata
 	const clientMeta: ConversationTurnMeta = {
+		// === New: Psychological state snapshot ===
+		behaviorIndicators: {
+			emotionalTone:
+				updatedEmotions.valence > 30
+					? "positive"
+					: updatedEmotions.valence < -30
+						? "negative"
+						: "neutral",
+			engagementLevel:
+				updatedEmotions.engagement > 70
+					? "highly_engaged"
+					: updatedEmotions.engagement > 50
+						? "active"
+						: updatedEmotions.engagement > 30
+							? "passive"
+							: "disengaged",
+			responseQuality:
+				behaviorGuidance.responseLength === "verbose"
+					? "detailed"
+					: behaviorGuidance.responseLength === "terse"
+						? "minimal"
+						: "adequate",
+		},
 		clientWantsToEnd: parsed.wantsToEnd,
+		decisionState: {
+			confidence: updatedDecision.confidence,
+			newBlockers: updatedDecision.blockers,
+			stage: updatedDecision.stage,
+		},
+		emotionalState: updatedEmotions,
 		interest: parsed.interest,
 		interruptions: parsed.interruption,
 	};
@@ -532,6 +817,9 @@ export async function orchestrateConversation(
 		nextIndex + 1,
 		clientMeta,
 	);
+
+	// Save updated psychological state
+	await savePsychologicalState(sessionId, psychState);
 
 	return {
 		clientResponse: parsed,

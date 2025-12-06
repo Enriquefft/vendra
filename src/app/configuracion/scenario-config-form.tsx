@@ -298,9 +298,7 @@ export function ScenarioConfigForm({
 							</select>
 						</div>
 						<div className="space-y-2 md:col-span-2">
-							<Label htmlFor={deleteAfterAnalysisId}>
-								Privacidad de datos
-							</Label>
+							<Label htmlFor={deleteAfterAnalysisId}>Privacidad de datos</Label>
 							<div className="flex items-center gap-3 rounded-md border border-input px-3 py-2">
 								<input
 									type="checkbox"
