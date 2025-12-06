@@ -1,15 +1,20 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(bun run build:*)",
-      "Bash(bun run lint:*)",
-      "Bash(bun run type:*)",
-      "Bash(bun test:*)",
-      "Bash(biome check:*)",
-      "Bash(bun run:*)",
-      "Bash(timeout 180 bun run db:push:*)"
-    ],
-    "deny": [],
-    "ask": []
-  }
+	"permissions": {
+		"allow": [
+			"Bash(bun run build:*)",
+			"Bash(bun run lint:*)",
+			"Bash(bun run type:*)",
+			"Bash(bun test:*)",
+			"Bash(biome check:*)",
+			"Bash(bun run:*)",
+			"Bash(timeout 180 bun run db:push:*)",
+			"Bash(printf:*)",
+			"Bash({ sleep 60)",
+			"Bash(})",
+			"Bash(bunx drizzle-kit push:*)",
+			"Bash(timeout 180 bunx drizzle-kit push:*)"
+		],
+		"ask": [],
+		"deny": []
+	}
 }
